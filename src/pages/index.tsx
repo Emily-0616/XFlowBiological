@@ -249,16 +249,6 @@ const Index = () => {
         },
         label: '数据',
         ports: { ...prots },
-        tools: [
-          {
-            name: 'button-remove',
-            args: {
-              x: '100%',
-              y: 0,
-              offset: { x: -10, y: 10 },
-            },
-          },
-        ],
       });
       stencil.load([n1, n2, r4, r5], 'group1');
       stencil.load([n3, n4], 'group2');
