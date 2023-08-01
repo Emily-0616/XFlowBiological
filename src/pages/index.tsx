@@ -1,5 +1,5 @@
 import { SaveOutlined } from '@ant-design/icons';
-import { Graph, Shape } from '@antv/x6';
+import { Cell, Graph, Shape } from '@antv/x6';
 import { Export } from '@antv/x6-plugin-export';
 import { History } from '@antv/x6-plugin-history';
 import { Keyboard } from '@antv/x6-plugin-keyboard';
@@ -11,6 +11,7 @@ import { css } from '@emotion/react';
 import { Button, Space, Tooltip, Upload } from 'antd';
 import fs from 'file-saver';
 import { useCallback, useRef } from 'react';
+import SettingNode from '../components/SettingNode';
 import Square from '../components/Square';
 import prots from '../utils/prots';
 
@@ -21,7 +22,16 @@ register({
   component: Square,
 });
 
-register;
+register({
+  shape: 'SettingNode',
+  width: 400,
+  component: SettingNode,
+  attrs: {
+    node: {
+      event: 'node:delete',
+    },
+  },
+});
 const commonAttrs = {
   body: {
     fill: '#fff',
@@ -33,6 +43,7 @@ const commonAttrs = {
 // 这个调用需要在组件外进行。
 const Index = () => {
   const graphRef = useRef<Graph | undefined>(undefined);
+  const settingNodeRef = useRef<Cell | undefined>(undefined);
   const containerRef = useRef<HTMLDivElement | undefined>(undefined);
   const stencilRef = useRef<HTMLDivElement | null>(null);
   const containerRefCallback = useCallback((node: any) => {
@@ -113,6 +124,12 @@ const Index = () => {
               factor: 4, // 主次网格线间隔
             },
           ],
+        },
+        interacting(cellView) {
+          if (cellView.cell.getData() && 'enableMove' in cellView.cell.getData()) {
+            return cellView.cell.getData().enableMove;
+          }
+          return true;
         },
       });
 
@@ -274,7 +291,25 @@ const Index = () => {
       });
 
       graphRef.current.on('cell:click', (event) => {
-        console.log(event);
+        if (!settingNodeRef.current) {
+          settingNodeRef.current = graphRef.current?.addNode({
+            x: event.x + 30,
+            y: event.y - 20,
+            shape: 'SettingNode',
+            data: {
+              enableMove: false,
+            },
+          });
+        }
+      });
+      graphRef.current.on('blank:click', () => {
+        if (settingNodeRef.current) {
+          graphRef.current?.removeNode(settingNodeRef.current.id);
+          settingNodeRef.current = undefined;
+        }
+      });
+      graphRef.current.on('settingNode:delete', (node: any) => {
+        console.log(node);
       });
     }
   }, []);

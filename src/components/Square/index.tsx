@@ -1,5 +1,4 @@
 import { css } from '@emotion/react';
-import NodeForm from '../NodeForm';
 
 const Square = () => {
   return (
@@ -11,7 +10,6 @@ const Square = () => {
           border: 1px solid #000;
         `}
       />
-      <NodeForm></NodeForm>
     </>
   );
 };

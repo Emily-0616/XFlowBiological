@@ -1,4 +1,5 @@
 import { CloseCircleOutlined } from '@ant-design/icons';
+import { Graph } from '@antv/x6';
 import { css } from '@emotion/react';
 import { Checkbox, Col, DatePicker, Input, Radio, RadioChangeEvent, Row, Select, Space } from 'antd';
 import { Dayjs } from 'dayjs';
@@ -11,7 +12,7 @@ const MainCss = css`
   background-color: #fff;
   border-radius: 4px;
   padding: 12px;
-  width: 400px;
+  width: 100%;
 `;
 
 const ContentCss = css``;
@@ -76,7 +77,7 @@ const gestationAgeOptions = () => {
 };
 type HeredityTypes = 'None' | 'Childless' | 'Infertile';
 type IndividualTypes = 'Alive' | 'Deceased' | 'Unborn' | 'Stillborn' | 'Miscarriage' | 'Aborted';
-const NodeForm = () => {
+const SettingNode = ({ node, graph }: { node: Node; graph: Graph }) => {
   const [radioValue, setRadioValue] = useState(0);
   const [individualValue, setIndividualValue] = useState<IndividualTypes>('Alive');
   const [heredityValue, setHeredityValue] = useState<HeredityTypes>('None');
@@ -100,10 +101,18 @@ const NodeForm = () => {
   const deathDatePickerChange = (event: Dayjs | null) => {
     setDeathDate(event);
   };
+
   return (
     <div css={MainCss}>
-      <div css={HeaderCss}>
-        <CloseCircleOutlined />
+      <div css={HeaderCss} id="close">
+        <CloseCircleOutlined
+          onClick={() => {
+            graph.trigger('settingNode:delete', node);
+          }}
+          css={css`
+            cursor: pointer;
+          `}
+        />
       </div>
       <div css={ContentCss}>
         <Space
@@ -242,4 +251,4 @@ const NodeForm = () => {
   );
 };
 
-export default NodeForm;
+export default SettingNode;
