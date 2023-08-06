@@ -1,25 +1,23 @@
 import { SaveOutlined } from '@ant-design/icons';
-import { Cell, Graph, Shape } from '@antv/x6';
+import { Cell, Graph, Node, Shape } from '@antv/x6';
 import { Export } from '@antv/x6-plugin-export';
 import { History } from '@antv/x6-plugin-history';
 import { Keyboard } from '@antv/x6-plugin-keyboard';
 import { Selection } from '@antv/x6-plugin-selection';
 import { Snapline } from '@antv/x6-plugin-snapline';
-import { Stencil } from '@antv/x6-plugin-stencil';
 import { register } from '@antv/x6-react-shape';
 import { css } from '@emotion/react';
 import { Button, Space, Tooltip, Upload } from 'antd';
 import fs from 'file-saver';
 import { useCallback, useRef } from 'react';
+import MainNode from '../components/MainNode';
 import SettingNode from '../components/SettingNode';
-import Square from '../components/Square';
-import prots from '../utils/prots';
 
 register({
-  shape: 'Square',
+  shape: 'MainNode',
   width: 40,
   height: 40,
-  component: Square,
+  component: MainNode,
 });
 
 register({
@@ -32,12 +30,84 @@ register({
     },
   },
 });
-const commonAttrs = {
-  body: {
-    fill: '#fff',
-    stroke: '#8f8f8f',
-    strokeWidth: 1,
+
+const ports = {
+  groups: {
+    top: {
+      position: 'top',
+      attrs: {
+        circle: {
+          r: 4,
+          magnet: true,
+          stroke: '#5F95FF',
+          strokeWidth: 1,
+          fill: '#fff',
+          style: {
+            visibility: 'hidden',
+          },
+        },
+      },
+    },
+    right: {
+      position: 'right',
+      attrs: {
+        circle: {
+          r: 4,
+          magnet: true,
+          stroke: '#5F95FF',
+          strokeWidth: 1,
+          fill: '#fff',
+          style: {
+            visibility: 'hidden',
+          },
+        },
+      },
+    },
+    bottom: {
+      position: 'bottom',
+      attrs: {
+        circle: {
+          r: 4,
+          magnet: true,
+          stroke: '#5F95FF',
+          strokeWidth: 1,
+          fill: '#fff',
+          style: {
+            visibility: 'hidden',
+          },
+        },
+      },
+    },
+    left: {
+      position: 'left',
+      attrs: {
+        circle: {
+          r: 4,
+          magnet: true,
+          stroke: '#5F95FF',
+          strokeWidth: 1,
+          fill: '#fff',
+          style: {
+            visibility: 'hidden',
+          },
+        },
+      },
+    },
   },
+  items: [
+    {
+      group: 'top',
+    },
+    {
+      group: 'right',
+    },
+    {
+      group: 'bottom',
+    },
+    {
+      group: 'left',
+    },
+  ],
 };
 
 // 这个调用需要在组件外进行。
@@ -45,7 +115,12 @@ const Index = () => {
   const graphRef = useRef<Graph | undefined>(undefined);
   const settingNodeRef = useRef<Cell | undefined>(undefined);
   const containerRef = useRef<HTMLDivElement | undefined>(undefined);
-  const stencilRef = useRef<HTMLDivElement | null>(null);
+  const selectNodeRef = useRef<Cell | undefined>(undefined);
+
+  const clearNode = () => {
+    selectNodeRef.current = undefined;
+    settingNodeRef.current = undefined;
+  };
   const containerRefCallback = useCallback((node: any) => {
     if (node) {
       containerRef.current = node;
@@ -133,143 +208,50 @@ const Index = () => {
         },
       });
 
-      graphRef.current.use(
-        new Export(),
-        new Snapline({
-          enabled: true,
-        }),
-        new History({
-          enabled: true,
-        }),
-        new Selection({
-          enabled: true,
-        }),
-        new Keyboard({
-          enabled: true,
-          global: true,
-        })
-      );
+      graphRef.current
+        .use(new Export())
+        .use(
+          new Snapline({
+            enabled: true,
+          })
+        )
+        .use(
+          new History({
+            enabled: true,
+          })
+        )
+        .use(
+          new Selection({
+            enabled: true,
+            showNodeSelectionBox: true,
+            filter(cell) {
+              return cell.shape !== 'SettingNode';
+            },
+          })
+        )
+        .use(
+          new Keyboard({
+            enabled: true,
+            global: true,
+          })
+        );
+      console.log(node.clientHeight);
 
+      graphRef.current.addNode({
+        shape: 'MainNode',
+        x: node.clientWidth / 2,
+        y: node.clientHeight / 2,
+        size: {
+          width: 60,
+          height: 60,
+        },
+        data: {
+          Gender: 'Unknown',
+        },
+        ports: { ...ports },
+      });
       // graphRef.current.fromJSON(data); // 渲染元素
       graphRef.current.centerContent(); // 居中显示
-
-      const stencil = new Stencil({
-        title: 'Stencil',
-        target: graphRef.current,
-        search(cell, keyword) {
-          return cell.shape.indexOf(keyword) !== -1;
-        },
-        placeholder: 'Search by shape name',
-        notFoundText: 'Not Found',
-        collapsable: true,
-        stencilGraphHeight: 0,
-        groups: [
-          {
-            name: 'group1',
-            title: 'Group(Collapsable)',
-          },
-          {
-            name: 'group2',
-            title: 'Group',
-            collapsable: false,
-          },
-        ],
-      });
-
-      stencilRef.current!.appendChild(stencil.container);
-
-      const n1 = graphRef.current.createNode({
-        shape: 'rect',
-        x: 40,
-        y: 40,
-        width: 80,
-        height: 40,
-        label: 'rect',
-        attrs: commonAttrs,
-      });
-
-      const n2 = graphRef.current.createNode({
-        shape: 'circle',
-        x: 180,
-        y: 40,
-        width: 40,
-        height: 40,
-        label: 'circle',
-        attrs: commonAttrs,
-      });
-
-      const n3 = graphRef.current.createNode({
-        shape: 'ellipse',
-        x: 280,
-        y: 40,
-        width: 80,
-        height: 40,
-        label: 'ellipse',
-        attrs: commonAttrs,
-      });
-
-      const n4 = graphRef.current.createNode({
-        shape: 'path',
-        x: 420,
-        y: 40,
-        width: 40,
-        height: 40,
-        // https://www.svgrepo.com/svg/13653/like
-        path: 'M24.85,10.126c2.018-4.783,6.628-8.125,11.99-8.125c7.223,0,12.425,6.179,13.079,13.543c0,0,0.353,1.828-0.424,5.119c-1.058,4.482-3.545,8.464-6.898,11.503L24.85,48L7.402,32.165c-3.353-3.038-5.84-7.021-6.898-11.503c-0.777-3.291-0.424-5.119-0.424-5.119C0.734,8.179,5.936,2,13.159,2C18.522,2,22.832,5.343,24.85,10.126z',
-        attrs: commonAttrs,
-        label: 'path',
-        ports: {
-          groups: {
-            group1: {
-              attrs: {
-                circle: {
-                  r: 6,
-                  magnet: true,
-                  stroke: '#8f8f8f',
-                  strokeWidth: 1,
-                  fill: '#fff',
-                },
-                text: {
-                  fontSize: 12,
-                  fill: '#888',
-                },
-              },
-              position: {
-                name: 'left',
-              },
-            },
-          },
-          items: [
-            {
-              id: 'port1',
-              group: 'group1',
-            },
-          ],
-        },
-      });
-      const r4 = graphRef.current.createNode({
-        shape: 'Square',
-        attrs: {
-          body: {
-            refPoints: '0,10 10,0 20,10 10,20',
-          },
-        },
-        label: '决策',
-        ports: { ...prots },
-      });
-      const r5 = graphRef.current.createNode({
-        shape: 'Square',
-        attrs: {
-          body: {
-            refPoints: '10,0 40,0 30,20 0,20',
-          },
-        },
-        label: '数据',
-        ports: { ...prots },
-      });
-      stencil.load([n1, n2, r4, r5], 'group1');
-      stencil.load([n3, n4], 'group2');
-
       // 控制连接桩显示/隐藏
       const showPorts = (allNodes: any, show: boolean) => {
         for (let i = 0, len = allNodes.length; i < len; i += 1) {
@@ -291,25 +273,38 @@ const Index = () => {
       });
 
       graphRef.current.on('cell:click', (event) => {
+        // 如果当前不存在settingNode 的情况下跟据当前点击的node 坐标生成id
         if (!settingNodeRef.current) {
           settingNodeRef.current = graphRef.current?.addNode({
-            x: event.x + 30,
+            x: event.x + 60,
             y: event.y - 20,
             shape: 'SettingNode',
             data: {
               enableMove: false,
             },
           });
+          // 生成了settingNode 以后记录选中的node
+          selectNodeRef.current = event.cell;
+        }
+        // 如果settingNode 存在并且被点击的情况下，框选父节点
+        if (selectNodeRef.current && event.cell.shape === 'SettingNode') {
+          graphRef.current?.select(selectNodeRef.current.id);
         }
       });
       graphRef.current.on('blank:click', () => {
         if (settingNodeRef.current) {
           graphRef.current?.removeNode(settingNodeRef.current.id);
-          settingNodeRef.current = undefined;
+          clearNode();
         }
       });
-      graphRef.current.on('settingNode:delete', (node: any) => {
-        console.log(node);
+      graphRef.current.on('settingNode:delete', (node: Node<Node.Properties>) => {
+        node.remove();
+        clearNode();
+      });
+      graphRef.current.on('settingNode:change', (node: Node<Node.Properties>, data) => {
+        selectNodeRef.current?.setData({
+          ...data,
+        });
       });
     }
   }, []);
@@ -370,13 +365,6 @@ const Index = () => {
           flex: 1;
         `}
       >
-        <div
-          css={css`
-            width: 200px;
-            position: relative;
-          `}
-          ref={(node) => (stencilRef.current = node)}
-        />
         <div
           css={css`
             flex: 1;
