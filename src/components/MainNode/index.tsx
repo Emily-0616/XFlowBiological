@@ -9,7 +9,8 @@ const GenderRender = ({ value }: { value: string }) => {
           width: 60px;
           height: 60px;
           border: 2px solid #5c5c66;
-          border-radius: 8px;
+          /* border-radius: 8px; */
+          border-radius: 50%;
         `}
       ></div>
     );
@@ -21,7 +22,8 @@ const GenderRender = ({ value }: { value: string }) => {
           width: 60px;
           height: 60px;
           border: 2px solid #5c5c66;
-          border-radius: 50%;
+          /* border-radius: 50%; */
+          border-radius: 8px;
         `}
       ></div>
     );

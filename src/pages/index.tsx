@@ -1,5 +1,5 @@
 import { SaveOutlined } from '@ant-design/icons';
-import { Cell, Graph, Node, Shape } from '@antv/x6';
+import { Cell, Graph, Node, Shape,EventArgs } from '@antv/x6';
 import { Export } from '@antv/x6-plugin-export';
 import { History } from '@antv/x6-plugin-history';
 import { Keyboard } from '@antv/x6-plugin-keyboard';
@@ -250,6 +250,52 @@ const Index = () => {
         },
         ports: { ...ports },
       });
+
+      const createParentNode = (child: EventArgs['node:port:click']) => {
+        console.log(child, 'child')
+        if (!graphRef.current) return
+        // 先限制只能点top
+        if (child.port === child.view.cell.port.ports.find(item => item.group === 'top')?.id) {
+          const maleNode: Node<Node.Properties> = graphRef.current.addNode({
+            shape: 'MainNode',
+            x: child.x - 120,
+            y: child.y - 150,
+            size: {
+              width: 60,
+              height: 60,
+            },
+            data: {
+              Gender: 'Male',
+            },
+            ports: { ...ports },
+          })
+          const femaleNode = graphRef.current.addNode({
+            shape: 'MainNode',
+            x: child.x + 60,
+            y: child.y - 150,
+            size: {
+              width: 60,
+              height: 60,
+            },
+            data: {
+              Gender: 'Female',
+            },
+            ports: { ...ports },
+          })
+          graphRef.current.addEdge({
+            source: { cell: maleNode.id, port: maleNode.port.ports.find(item => item.group === 'right')?.id },
+            target: { cell: child.cell.id, port: child.port },
+            vertices: [],
+            connector: 'normal',
+          })
+          graphRef.current.addEdge({
+            source: { cell: femaleNode.id, port: femaleNode.port.ports.find(item => item.group === 'left')?.id },
+            target: { cell: child.cell.id, port: child.port },
+            vertices: [],
+            connector: 'normal',
+          })
+        }
+      }
       // graphRef.current.fromJSON(data); // 渲染元素
       graphRef.current.centerContent(); // 居中显示
       // 控制连接桩显示/隐藏
@@ -306,6 +352,9 @@ const Index = () => {
           ...data,
         });
       });
+      graphRef.current.on('node:port:click', (node: EventArgs['node:port:click']) => {
+        createParentNode(node)
+      })
     }
   }, []);
 
