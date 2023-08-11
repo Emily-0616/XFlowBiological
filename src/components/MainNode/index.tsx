@@ -45,7 +45,7 @@ const GenderRender = ({ value }: { value: string }) => {
 
 const MainNode = ({ node, graph }: { node: Node<Node.Properties>; graph: Graph }) => {
   const data = node.data;
-  console.log(data);
+  // console.log(data);
   return (
     <>
       <GenderRender value={data.Gender} />

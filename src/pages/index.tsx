@@ -1,5 +1,5 @@
 import { SaveOutlined } from '@ant-design/icons';
-import { Cell, Graph, Node, Shape,EventArgs } from '@antv/x6';
+import { Cell, Graph, Node, Shape, EventArgs } from '@antv/x6'
 import { Export } from '@antv/x6-plugin-export';
 import { History } from '@antv/x6-plugin-history';
 import { Keyboard } from '@antv/x6-plugin-keyboard';
@@ -12,6 +12,13 @@ import fs from 'file-saver';
 import { useCallback, useRef } from 'react';
 import MainNode from '../components/MainNode';
 import SettingNode from '../components/SettingNode';
+
+/** @description 新增兄弟节点时判断输出什么属性 */
+enum AddNodeGenderMap {
+  'Unknown' = 'Unknown',
+  'Male' = 'Female',
+  'Female' = 'Male'
+}
 
 register({
   shape: 'MainNode',
@@ -251,51 +258,86 @@ const Index = () => {
         ports: { ...ports },
       });
 
+     
+      const createNode = (x: number, y: number, gender: string): Node<Node.Properties> => {
+        return graphRef.current!.addNode({
+          shape: 'MainNode',
+          x,
+          y,
+          size: {
+            width: 60,
+            height: 60,
+          },
+          data: { Gender: gender },
+          ports: { ...ports },
+        })
+      }
+
+      const addEdge = (sourceCell: string, sourcePortId: string|undefined, targetCell: string, targetPortId: string|undefined) => {
+        graphRef.current?.addEdge({
+          source: { cell: sourceCell, port: sourcePortId },
+          target: { cell: targetCell, port: targetPortId },
+          vertices: [],
+          connector: 'normal',
+        })
+      }
+
+      // 点击连接桩生成节点
       const createParentNode = (child: EventArgs['node:port:click']) => {
-        console.log(child, 'child')
         if (!graphRef.current) return
-        // 先限制只能点top
-        if (child.port === child.view.cell.port.ports.find(item => item.group === 'top')?.id) {
-          const maleNode: Node<Node.Properties> = graphRef.current.addNode({
-            shape: 'MainNode',
-            x: child.x - 120,
-            y: child.y - 150,
-            size: {
-              width: 60,
-              height: 60,
-            },
-            data: {
-              Gender: 'Male',
-            },
-            ports: { ...ports },
-          })
-          const femaleNode = graphRef.current.addNode({
-            shape: 'MainNode',
-            x: child.x + 60,
-            y: child.y - 150,
-            size: {
-              width: 60,
-              height: 60,
-            },
-            data: {
-              Gender: 'Female',
-            },
-            ports: { ...ports },
-          })
-          graphRef.current.addEdge({
-            source: { cell: maleNode.id, port: maleNode.port.ports.find(item => item.group === 'right')?.id },
-            target: { cell: child.cell.id, port: child.port },
-            vertices: [],
-            connector: 'normal',
-          })
-          graphRef.current.addEdge({
-            source: { cell: femaleNode.id, port: femaleNode.port.ports.find(item => item.group === 'left')?.id },
-            target: { cell: child.cell.id, port: child.port },
-            vertices: [],
-            connector: 'normal',
-          })
+        const currentNode = selectNodeRef.current as Node
+        // 点击上方连接桩
+        if (child.port === child.view.cell.ports.items.find(item => item.group === 'top')?.id) {
+          const maleNode = createNode(child.x - 120, child.y - 150, 'Male')
+          const femaleNode = createNode(child.x + 60, child.y - 150, 'Female')
+          addEdge(maleNode.id, maleNode.ports.items.find(item => item.group === 'right')?.id, child.cell.id, child.port)
+          addEdge(
+            femaleNode.id,
+            femaleNode.ports.items.find(item => item.group === 'left')?.id,
+            child.cell.id,
+            child.port
+          )
+        // 点击右侧连接桩
+        } else if (child.port === child.view.cell.ports.items.find(item => item.group === 'right')?.id) {
+          const brotherNode = createNode(
+            child.x + 120,
+            child.y - (currentNode?.size().height / 2 ?? 0) + 1.5,
+            AddNodeGenderMap[child.node.data?.Gender as AddNodeGenderMap]
+          )
+          const childNode = createNode(child.x + 30, child.y + 150, 'Unknown')
+          addEdge(child.cell.id, child.port, childNode.id, childNode.ports.items.find(item => item.group === 'top')?.id)
+          addEdge(
+            brotherNode.id,
+            brotherNode.ports.items.find(item => item.group === 'left')?.id,
+            childNode.id,
+            childNode.ports.items.find(item => item.group === 'top')?.id
+          )
+        // 点击左侧连接桩
+        } else if (child.port === child.view.cell.ports.items.find(item => item.group === 'left')?.id) {
+          const brotherNode = createNode(
+            child.x - 180,
+            child.y - (currentNode?.size().height / 2 ?? 0) + 1.5,
+            AddNodeGenderMap[child.node.data?.Gender as AddNodeGenderMap]
+          )
+          const childNode = createNode(child.x - 90, child.y + 150, 'Unknown')
+          addEdge(child.cell.id, child.port, childNode.id, childNode.ports.items.find(item => item.group === 'top')?.id)
+          addEdge(
+            brotherNode.id,
+            brotherNode.ports.items.find(item => item.group === 'right')?.id,
+            childNode.id,
+            childNode.ports.items.find(item => item.group === 'top')?.id
+          )
+        // 点击下方连接桩
+        } else if (child.port === child.view.cell.ports.items.find(item => item.group === 'bottom')?.id) {
+          const childNode = createNode(
+            child.x - (currentNode?.size().width / 2 ?? 0) - 2,
+            child.y + 120,
+            'Unknown'
+          )
+          addEdge(child.cell.id, child.port, childNode.id, childNode.ports.items.find(item => item.group === 'top')?.id)
         }
       }
+
       // graphRef.current.fromJSON(data); // 渲染元素
       graphRef.current.centerContent(); // 居中显示
       // 控制连接桩显示/隐藏
