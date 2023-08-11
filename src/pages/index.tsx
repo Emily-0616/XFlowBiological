@@ -273,7 +273,12 @@ const Index = () => {
         })
       }
 
-      const addEdge = (sourceCell: string, sourcePortId: string|undefined, targetCell: string, targetPortId: string|undefined) => {
+      const addEdge = (
+        sourceCell: string,
+        sourcePortId: string | undefined,
+        targetCell: string,
+        targetPortId: string | undefined
+      ) => {
         graphRef.current?.addEdge({
           source: { cell: sourceCell, port: sourcePortId },
           target: { cell: targetCell, port: targetPortId },
@@ -297,7 +302,7 @@ const Index = () => {
             child.cell.id,
             child.port
           )
-        // 点击右侧连接桩
+          // 点击右侧连接桩
         } else if (child.port === child.view.cell.ports.items.find(item => item.group === 'right')?.id) {
           const brotherNode = createNode(
             child.x + 120,
@@ -312,7 +317,7 @@ const Index = () => {
             childNode.id,
             childNode.ports.items.find(item => item.group === 'top')?.id
           )
-        // 点击左侧连接桩
+          // 点击左侧连接桩
         } else if (child.port === child.view.cell.ports.items.find(item => item.group === 'left')?.id) {
           const brotherNode = createNode(
             child.x - 180,
@@ -327,13 +332,9 @@ const Index = () => {
             childNode.id,
             childNode.ports.items.find(item => item.group === 'top')?.id
           )
-        // 点击下方连接桩
+          // 点击下方连接桩
         } else if (child.port === child.view.cell.ports.items.find(item => item.group === 'bottom')?.id) {
-          const childNode = createNode(
-            child.x - (currentNode?.size().width / 2 ?? 0) - 2,
-            child.y + 120,
-            'Unknown'
-          )
+          const childNode = createNode(child.x - (currentNode?.size().width / 2 ?? 0) - 2, child.y + 120, 'Unknown')
           addEdge(child.cell.id, child.port, childNode.id, childNode.ports.items.find(item => item.group === 'top')?.id)
         }
       }
