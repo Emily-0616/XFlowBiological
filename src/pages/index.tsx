@@ -1,5 +1,5 @@
 import { SaveOutlined } from '@ant-design/icons';
-import { Cell, Graph, Node, Shape, EventArgs } from '@antv/x6'
+import { Cell, EventArgs, Graph, Node } from '@antv/x6';
 import { Export } from '@antv/x6-plugin-export';
 import { History } from '@antv/x6-plugin-history';
 import { Keyboard } from '@antv/x6-plugin-keyboard';
@@ -17,7 +17,7 @@ import SettingNode from '../components/SettingNode';
 enum AddNodeGenderMap {
   'Unknown' = 'Unknown',
   'Male' = 'Female',
-  'Female' = 'Male'
+  'Female' = 'Male',
 }
 
 register({
@@ -147,22 +147,22 @@ const Index = () => {
           snap: {
             radius: 20,
           },
-          createEdge() {
-            return new Shape.Edge({
-              attrs: {
-                line: {
-                  stroke: '#A2B1C3',
-                  strokeWidth: 2,
-                  targetMarker: {
-                    name: 'block',
-                    width: 12,
-                    height: 8,
-                  },
-                },
-              },
-              zIndex: 0,
-            });
-          },
+          // createEdge() {
+          //   return new Shape.Edge({
+          //     attrs: {
+          //       line: {
+          //         stroke: '#A2B1C3',
+          //         strokeWidth: 2,
+          //         targetMarker: {
+          //           name: 'block',
+          //           width: 12,
+          //           height: 8,
+          //         },
+          //       },
+          //     },
+          //     zIndex: 0,
+          //   });
+          // },
           validateConnection({ targetMagnet }) {
             return !!targetMagnet;
           },
@@ -242,7 +242,6 @@ const Index = () => {
             global: true,
           })
         );
-      console.log(node.clientHeight);
 
       graphRef.current.addNode({
         shape: 'MainNode',
@@ -258,7 +257,6 @@ const Index = () => {
         ports: { ...ports },
       });
 
-     
       const createNode = (x: number, y: number, gender: string): Node<Node.Properties> => {
         return graphRef.current!.addNode({
           shape: 'MainNode',
@@ -270,74 +268,64 @@ const Index = () => {
           },
           data: { Gender: gender },
           ports: { ...ports },
-        })
-      }
+        });
+      };
 
-      const addEdge = (
-        sourceCell: string,
-        sourcePortId: string | undefined,
-        targetCell: string,
-        targetPortId: string | undefined
-      ) => {
+      const addEdge = (sourceCell: string, sourcePortId: string | undefined, targetCell: string, targetPortId: string | undefined) => {
         graphRef.current?.addEdge({
           source: { cell: sourceCell, port: sourcePortId },
           target: { cell: targetCell, port: targetPortId },
           vertices: [],
           connector: 'normal',
-        })
-      }
+        });
+      };
 
       // 点击连接桩生成节点
       const createParentNode = (child: EventArgs['node:port:click']) => {
-        if (!graphRef.current) return
-        const currentNode = selectNodeRef.current as Node
+        if (!graphRef.current) return;
+        const currentNode = selectNodeRef.current as Node;
         // 点击上方连接桩
-        if (child.port === child.view.cell.ports.items.find(item => item.group === 'top')?.id) {
-          const maleNode = createNode(child.x - 120, child.y - 150, 'Male')
-          const femaleNode = createNode(child.x + 60, child.y - 150, 'Female')
-          addEdge(maleNode.id, maleNode.ports.items.find(item => item.group === 'right')?.id, child.cell.id, child.port)
-          addEdge(
-            femaleNode.id,
-            femaleNode.ports.items.find(item => item.group === 'left')?.id,
-            child.cell.id,
-            child.port
-          )
+        if (child.port === child.view.cell.ports.items.find((item) => item.group === 'top')?.id) {
+          const maleNode = createNode(child.x - 120, child.y - 150, 'Male');
+          const femaleNode = createNode(child.x + 60, child.y - 150, 'Female');
+          addEdge(maleNode.id, maleNode.ports.items.find((item) => item.group === 'right')?.id, child.cell.id, child.port);
+          addEdge(femaleNode.id, femaleNode.ports.items.find((item) => item.group === 'left')?.id, child.cell.id, child.port);
           // 点击右侧连接桩
-        } else if (child.port === child.view.cell.ports.items.find(item => item.group === 'right')?.id) {
+        } else if (child.port === child.view.cell.ports.items.find((item) => item.group === 'right')?.id) {
           const brotherNode = createNode(
             child.x + 120,
             child.y - (currentNode?.size().height / 2 ?? 0) + 1.5,
             AddNodeGenderMap[child.node.data?.Gender as AddNodeGenderMap]
-          )
-          const childNode = createNode(child.x + 30, child.y + 150, 'Unknown')
-          addEdge(child.cell.id, child.port, childNode.id, childNode.ports.items.find(item => item.group === 'top')?.id)
+          );
+          const childNode = createNode(child.x + 30, child.y + 150, 'Unknown');
+          addEdge(child.cell.id, child.port, childNode.id, childNode.ports.items.find((item) => item.group === 'top')?.id);
           addEdge(
             brotherNode.id,
-            brotherNode.ports.items.find(item => item.group === 'left')?.id,
+            brotherNode.ports.items.find((item) => item.group === 'left')?.id,
             childNode.id,
-            childNode.ports.items.find(item => item.group === 'top')?.id
-          )
+            childNode.ports.items.find((item) => item.group === 'top')?.id
+          );
           // 点击左侧连接桩
-        } else if (child.port === child.view.cell.ports.items.find(item => item.group === 'left')?.id) {
+        } else if (child.port === child.view.cell.ports.items.find((item) => item.group === 'left')?.id) {
           const brotherNode = createNode(
             child.x - 180,
             child.y - (currentNode?.size().height / 2 ?? 0) + 1.5,
             AddNodeGenderMap[child.node.data?.Gender as AddNodeGenderMap]
-          )
-          const childNode = createNode(child.x - 90, child.y + 150, 'Unknown')
-          addEdge(child.cell.id, child.port, childNode.id, childNode.ports.items.find(item => item.group === 'top')?.id)
+          );
+          const childNode = createNode(child.x - 90, child.y + 150, 'Unknown');
+          addEdge(child.cell.id, child.port, childNode.id, childNode.ports.items.find((item) => item.group === 'top')?.id);
           addEdge(
             brotherNode.id,
-            brotherNode.ports.items.find(item => item.group === 'right')?.id,
+            brotherNode.ports.items.find((item) => item.group === 'right')?.id,
             childNode.id,
-            childNode.ports.items.find(item => item.group === 'top')?.id
-          )
+            childNode.ports.items.find((item) => item.group === 'top')?.id
+          );
           // 点击下方连接桩
-        } else if (child.port === child.view.cell.ports.items.find(item => item.group === 'bottom')?.id) {
-          const childNode = createNode(child.x - (currentNode?.size().width / 2 ?? 0) - 2, child.y + 120, 'Unknown')
-          addEdge(child.cell.id, child.port, childNode.id, childNode.ports.items.find(item => item.group === 'top')?.id)
+        } else if (child.port === child.view.cell.ports.items.find((item) => item.group === 'bottom')?.id) {
+          const childNode = createNode(child.x - (currentNode?.size().width / 2 ?? 0) - 2, child.y + 120, 'Unknown');
+          addEdge(child.cell.id, child.port, childNode.id, childNode.ports.items.find((item) => item.group === 'top')?.id);
         }
-      }
+      };
 
       // graphRef.current.fromJSON(data); // 渲染元素
       graphRef.current.centerContent(); // 居中显示
@@ -354,14 +342,15 @@ const Index = () => {
           }
         }
       };
-      graphRef.current.on('cell:mouseenter', () => {
+      graphRef.current.on('node:mouseenter', () => {
         showPorts(graphRef.current?.getNodes(), true);
       });
-      graphRef.current.on('cell:mouseleave', () => {
+      graphRef.current.on('node:mouseleave', () => {
         showPorts(graphRef.current?.getNodes(), false);
       });
 
-      graphRef.current.on('cell:click', (event) => {
+      graphRef.current.on('node:click', (event) => {
+        if (event.e.target.nodeName === 'circle') return;
         // 如果当前不存在settingNode 的情况下跟据当前点击的node 坐标生成id
         if (!settingNodeRef.current) {
           settingNodeRef.current = graphRef.current?.addNode({
@@ -396,8 +385,8 @@ const Index = () => {
         });
       });
       graphRef.current.on('node:port:click', (node: EventArgs['node:port:click']) => {
-        createParentNode(node)
-      })
+        createParentNode(node);
+      });
     }
   }, []);
 
