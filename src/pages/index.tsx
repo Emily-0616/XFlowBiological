@@ -282,21 +282,20 @@ const Index = () => {
 
       // 点击连接桩生成节点
       const createParentNode = (child: EventArgs['node:port:click']) => {
-        if (!graphRef.current) return;
+        console.log(child);
         const currentNode = selectNodeRef.current as Node;
+        const currentPorts = child.cell.ports.items.find((item) => item.id === child.port);
         // 点击上方连接桩
-        if (child.port === child.view.cell.ports.items.find((item) => item.group === 'top')?.id) {
+        if (currentPorts?.group === 'top') {
           const maleNode = createNode(child.x - 120, child.y - 150, 'Male');
           const femaleNode = createNode(child.x + 60, child.y - 150, 'Female');
           addEdge(maleNode.id, maleNode.ports.items.find((item) => item.group === 'right')?.id, child.cell.id, child.port);
           addEdge(femaleNode.id, femaleNode.ports.items.find((item) => item.group === 'left')?.id, child.cell.id, child.port);
-          // 点击右侧连接桩
-        } else if (child.port === child.view.cell.ports.items.find((item) => item.group === 'right')?.id) {
-          const brotherNode = createNode(
-            child.x + 120,
-            child.y - (currentNode?.size().height / 2 ?? 0) + 1.5,
-            AddNodeGenderMap[child.node.data?.Gender as AddNodeGenderMap]
-          );
+        }
+        // 点击右侧连接桩
+        if (currentPorts?.group === 'right') {
+          console.log(child.y);
+          const brotherNode = createNode(child.x + 120, child.y, AddNodeGenderMap[child.node.data?.Gender as AddNodeGenderMap]);
           const childNode = createNode(child.x + 30, child.y + 150, 'Unknown');
           addEdge(child.cell.id, child.port, childNode.id, childNode.ports.items.find((item) => item.group === 'top')?.id);
           addEdge(
@@ -305,13 +304,10 @@ const Index = () => {
             childNode.id,
             childNode.ports.items.find((item) => item.group === 'top')?.id
           );
-          // 点击左侧连接桩
-        } else if (child.port === child.view.cell.ports.items.find((item) => item.group === 'left')?.id) {
-          const brotherNode = createNode(
-            child.x - 180,
-            child.y - (currentNode?.size().height / 2 ?? 0) + 1.5,
-            AddNodeGenderMap[child.node.data?.Gender as AddNodeGenderMap]
-          );
+        }
+        // 点击左侧连接桩
+        if (currentPorts?.group === 'left') {
+          const brotherNode = createNode(child.x - 180, child.y - 1.5, AddNodeGenderMap[child.node.data?.Gender as AddNodeGenderMap]);
           const childNode = createNode(child.x - 90, child.y + 150, 'Unknown');
           addEdge(child.cell.id, child.port, childNode.id, childNode.ports.items.find((item) => item.group === 'top')?.id);
           addEdge(
@@ -320,9 +316,10 @@ const Index = () => {
             childNode.id,
             childNode.ports.items.find((item) => item.group === 'top')?.id
           );
-          // 点击下方连接桩
-        } else if (child.port === child.view.cell.ports.items.find((item) => item.group === 'bottom')?.id) {
-          const childNode = createNode(child.x - (currentNode?.size().width / 2 ?? 0) - 2, child.y + 120, 'Unknown');
+        }
+        // 点击下方连接桩
+        if (currentPorts?.group === 'bottom') {
+          const childNode = createNode(child.x - -2, child.y + 120, 'Unknown');
           addEdge(child.cell.id, child.port, childNode.id, childNode.ports.items.find((item) => item.group === 'top')?.id);
         }
       };
@@ -413,6 +410,7 @@ const Index = () => {
     });
     fs.saveAs(fileToSave, fileName);
   };
+
   return (
     <div
       css={css`
