@@ -117,6 +117,12 @@ const ports = {
   ],
 };
 
+// 点击连接桩生成的 MainNode 尺寸
+const CREATE_NODE_SIZE = {
+  width: 60,
+  height: 60,
+}
+
 // 这个调用需要在组件外进行。
 const Index = () => {
   const graphRef = useRef<Graph | undefined>(undefined);
@@ -262,10 +268,7 @@ const Index = () => {
           shape: 'MainNode',
           x,
           y,
-          size: {
-            width: 60,
-            height: 60,
-          },
+          size: CREATE_NODE_SIZE,
           data: { Gender: gender },
           ports: { ...ports },
         });
@@ -282,8 +285,8 @@ const Index = () => {
 
       // 点击连接桩生成节点
       const createParentNode = (child: EventArgs['node:port:click']) => {
+        console.log(child,'child')
         if (!graphRef.current) return;
-        const currentNode = selectNodeRef.current as Node;
         // 点击上方连接桩
         if (child.port === child.view.cell.ports.items.find((item) => item.group === 'top')?.id) {
           const maleNode = createNode(child.x - 120, child.y - 150, 'Male');
@@ -294,7 +297,7 @@ const Index = () => {
         } else if (child.port === child.view.cell.ports.items.find((item) => item.group === 'right')?.id) {
           const brotherNode = createNode(
             child.x + 120,
-            child.y - (currentNode?.size().height / 2 ?? 0) + 1.5,
+            child.y - (CREATE_NODE_SIZE.height / 2) + 1.5,
             AddNodeGenderMap[child.node.data?.Gender as AddNodeGenderMap]
           );
           const childNode = createNode(child.x + 30, child.y + 150, 'Unknown');
@@ -309,7 +312,7 @@ const Index = () => {
         } else if (child.port === child.view.cell.ports.items.find((item) => item.group === 'left')?.id) {
           const brotherNode = createNode(
             child.x - 180,
-            child.y - (currentNode?.size().height / 2 ?? 0) + 1.5,
+            child.y - (CREATE_NODE_SIZE.height / 2 ?? 0) + 1.5,
             AddNodeGenderMap[child.node.data?.Gender as AddNodeGenderMap]
           );
           const childNode = createNode(child.x - 90, child.y + 150, 'Unknown');
@@ -322,7 +325,7 @@ const Index = () => {
           );
           // 点击下方连接桩
         } else if (child.port === child.view.cell.ports.items.find((item) => item.group === 'bottom')?.id) {
-          const childNode = createNode(child.x - (currentNode?.size().width / 2 ?? 0) - 2, child.y + 120, 'Unknown');
+          const childNode = createNode(child.x - (CREATE_NODE_SIZE.width / 2 ?? 0) - 2, child.y + 120, 'Unknown');
           addEdge(child.cell.id, child.port, childNode.id, childNode.ports.items.find((item) => item.group === 'top')?.id);
         }
       };
