@@ -1,6 +1,12 @@
 import { css } from '@emotion/react'
+import { FC } from 'react'
 
-const CustomDeleteLabel = () => {
+interface Props {
+  id: string
+  onDelete: (id: string) => void
+}
+
+const CustomDeleteLabel: FC<Props> = props => {
   const CustomDeleteLabelStyled = css`
     width: 50px;
     height: 12px;
@@ -11,7 +17,16 @@ const CustomDeleteLabel = () => {
     text-align: center;
   `
 
-  return <div css={CustomDeleteLabelStyled} >remove</div>
+  return (
+    <div
+      css={CustomDeleteLabelStyled}
+      onClick={() => {
+        typeof props.onDelete === 'function' && props.onDelete(props.id)
+      }}
+    >
+      remove
+    </div>
+  )
 }
 
 export default CustomDeleteLabel
