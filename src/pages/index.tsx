@@ -12,6 +12,9 @@ import fs from 'file-saver';
 import { useCallback, useRef } from 'react';
 import MainNode from '../components/MainNode';
 import SettingNode from '../components/SettingNode';
+import ReactDOM from 'react-dom/client';
+import CustomDeleteLabel from '../components/CustomDeleteLabel'
+import { ports } from '../data/default'
 
 /** @description 新增兄弟节点时判断输出什么属性 */
 enum AddNodeGenderMap {
@@ -19,6 +22,8 @@ enum AddNodeGenderMap {
   'Male' = 'Female',
   'Female' = 'Male',
 }
+
+type labelKey = 'CustomDeleteLabel'
 
 register({
   shape: 'MainNode',
@@ -38,84 +43,7 @@ register({
   },
 });
 
-const ports = {
-  groups: {
-    top: {
-      position: 'top',
-      attrs: {
-        circle: {
-          r: 4,
-          magnet: true,
-          stroke: '#5F95FF',
-          strokeWidth: 1,
-          fill: '#fff',
-          style: {
-            visibility: 'hidden',
-          },
-        },
-      },
-    },
-    right: {
-      position: 'right',
-      attrs: {
-        circle: {
-          r: 4,
-          magnet: true,
-          stroke: '#5F95FF',
-          strokeWidth: 1,
-          fill: '#fff',
-          style: {
-            visibility: 'hidden',
-          },
-        },
-      },
-    },
-    bottom: {
-      position: 'bottom',
-      attrs: {
-        circle: {
-          r: 4,
-          magnet: true,
-          stroke: '#5F95FF',
-          strokeWidth: 1,
-          fill: '#fff',
-          style: {
-            visibility: 'hidden',
-          },
-        },
-      },
-    },
-    left: {
-      position: 'left',
-      attrs: {
-        circle: {
-          r: 4,
-          magnet: true,
-          stroke: '#5F95FF',
-          strokeWidth: 1,
-          fill: '#fff',
-          style: {
-            visibility: 'hidden',
-          },
-        },
-      },
-    },
-  },
-  items: [
-    {
-      group: 'top',
-    },
-    {
-      group: 'right',
-    },
-    {
-      group: 'bottom',
-    },
-    {
-      group: 'left',
-    },
-  ],
-};
+
 
 // 点击连接桩生成的 MainNode 尺寸
 const CREATE_NODE_SIZE = {
@@ -170,7 +98,7 @@ const Index = () => {
           //   });
           // },
           validateConnection({ targetMagnet }) {
-            return !!targetMagnet;
+            return !!targetMagnet
           },
         },
         highlighting: {
@@ -213,13 +141,24 @@ const Index = () => {
             },
           ],
         },
-        interacting(cellView) {
-          if (cellView.cell.getData() && 'enableMove' in cellView.cell.getData()) {
-            return cellView.cell.getData().enableMove;
-          }
-          return true;
-        },
-      });
+        interacting:()=> ({
+            edgeLabelMovable:false
+        }),
+          onEdgeLabelRendered: args => {
+            const { selectors,label } = args
+            const content = selectors.foContent as HTMLDivElement
+            if (content && label.data === 'CustomDeleteLabel') {
+              content.style.display = 'flex'
+              content.style.alignItems = 'center'
+              content.style.justifyContent = 'center'
+              content.style.width = '50px'
+              content.style.height = '12px'
+              content.style.lineHeight = '12px'
+              content.style.transform = 'translate(-17px,-15px)'
+              ReactDOM.createRoot(content).render(<CustomDeleteLabel />)
+            }
+        }
+      })
 
       graphRef.current
         .use(new Export())
@@ -274,14 +213,26 @@ const Index = () => {
         });
       };
 
-      const addEdge = (sourceCell: string, sourcePortId: string | undefined, targetCell: string, targetPortId: string | undefined) => {
-        graphRef.current?.addEdge({
+      const addEdge = (
+        sourceCell: string,
+        sourcePortId: string | undefined,
+        targetCell: string,
+        targetPortId: string | undefined,
+        labelOption?: { position: number; data: labelKey }
+      ) => {
+        const edge = graphRef.current?.addEdge({
           source: { cell: sourceCell, port: sourcePortId },
           target: { cell: targetCell, port: targetPortId },
           vertices: [],
           connector: 'normal',
-        });
-      };
+        })
+        labelOption &&
+          edge?.appendLabel({
+            markup: [{ tagName: 'foreignObject', selector: 'foContent', }],
+            data: labelOption.data,
+            position:labelOption.position
+          })
+      }
 
       // 点击连接桩生成节点
       const createParentNode = (child: EventArgs['node:port:click']) => {
@@ -291,7 +242,13 @@ const Index = () => {
         if (child.port === child.view.cell.ports.items.find((item) => item.group === 'top')?.id) {
           const maleNode = createNode(child.x - 120, child.y - 150, 'Male');
           const femaleNode = createNode(child.x + 60, child.y - 150, 'Female');
-          addEdge(maleNode.id, maleNode.ports.items.find((item) => item.group === 'right')?.id, child.cell.id, child.port);
+          addEdge(
+            maleNode.id,
+            maleNode.ports.items.find(item => item.group === 'right')?.id,
+            child.cell.id,
+            child.port,
+            { position: 50, data: 'CustomDeleteLabel' }
+          )
           addEdge(femaleNode.id, femaleNode.ports.items.find((item) => item.group === 'left')?.id, child.cell.id, child.port);
           // 点击右侧连接桩
         } else if (child.port === child.view.cell.ports.items.find((item) => item.group === 'right')?.id) {
