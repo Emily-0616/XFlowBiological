@@ -1,0 +1,43 @@
+{
+  "settingNode": {
+    "tabOptiosn": {
+      "Personal": "Personal",
+      "Clinical": "Clinical"
+    },
+    "PersonalOptions": {
+      "Gender": {
+        "Title": "Gender",
+        "Male": "Male",
+        "Female": "Female",
+        "Unknown": "Unknown"
+      },
+      "FirstName": "First name",
+      "LastName": "Last name",
+      "LastNameAtBirth": "Last name at birth",
+      "ExternalID": "External ID",
+      "Ethnicities": "Ethnicities",
+      "DateOfBirth": "Date of birth",
+      "DateOfDeath": "Date of death",
+      "IndividualIs": {
+        "Title": "Individual is",
+        "Alive": "Alive",
+        "Deceased": "Deceased",
+        "Unborn": "Unborn",
+        "Stillborn": "Stillborn",
+        "Miscarriage": "Miscarriage",
+        "Aborted": "Aborted"
+      },
+      "AdoptedIn": "Adopted in",
+      "HeredityOptions": {
+        "Title": "Heredity options",
+        "None": "None",
+        "Childless": "Childless",
+        "Infertile": "Infertile"
+      },
+      "GestationAge": {
+        "Title": "Gestation age",
+        "week": "week"
+      }
+    }
+  }
+}

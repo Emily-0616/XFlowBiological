@@ -7,7 +7,7 @@ import { Selection } from '@antv/x6-plugin-selection';
 import { Snapline } from '@antv/x6-plugin-snapline';
 import { register } from '@antv/x6-react-shape';
 import { css } from '@emotion/react';
-import { Button, Space, Tooltip, Upload } from 'antd';
+import { Button, Dropdown, Space, Tooltip, Upload } from 'antd';
 import fs from 'file-saver';
 import { useCallback, useRef } from 'react';
 import MainNode from '../components/MainNode';
@@ -284,7 +284,6 @@ const Index = () => {
       const createParentNode = (child: EventArgs['node:port:click']) => {
         const { x, y } = child.cell.position();
         const currentPorts = child.cell.ports.items.find((item) => item.id === child.port);
-        console.log(currentPorts);
         // 点击上方连接桩
         if (currentPorts?.group === 'top') {
           const maleNode = createNode(x - 100, y - 150, 'Male');
@@ -366,12 +365,14 @@ const Index = () => {
         }
       });
       graphRef.current.on('blank:click', () => {
+        graphRef.current?.cleanSelection();
         if (settingNodeRef.current) {
           graphRef.current?.removeNode(settingNodeRef.current.id);
           clearNode();
         }
       });
       graphRef.current.on('settingNode:delete', (node: Node<Node.Properties>) => {
+        graphRef.current?.cleanSelection();
         node.remove();
         clearNode();
       });
@@ -427,9 +428,31 @@ const Index = () => {
         `}
       >
         <Space wrap>
-          <Tooltip title="search">
+          <Tooltip title="保存">
             <Button type="text" icon={<SaveOutlined />} onClick={handleSave} />
           </Tooltip>
+          <Dropdown
+            menu={{
+              items: [
+                {
+                  label: '简中',
+                  key: 'zh-cn',
+                },
+                {
+                  label: '英文',
+                  key: 'en',
+                },
+              ],
+            }}
+          >
+            <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="20" height="20">
+              <path
+                d="M547.797333 638.208l-104.405333-103.168 1.237333-1.28a720.170667 720.170667 0 0 0 152.490667-268.373333h120.448V183.082667h-287.744V100.906667H347.605333v82.218666H59.818667V265.386667h459.178666a648.234667 648.234667 0 0 1-130.304 219.946666 643.242667 643.242667 0 0 1-94.976-137.728H211.541333a722.048 722.048 0 0 0 122.453334 187.434667l-209.194667 206.378667 58.368 58.368 205.525333-205.525334 127.872 127.829334 31.232-83.84m231.424-208.426667h-82.218666l-184.96 493.312h82.218666l46.037334-123.306667h195.242666l46.464 123.306667h82.218667l-185.002667-493.312m-107.690666 287.744l66.56-178.005333 66.602666 178.005333z"
+                fill="#5c5c66"
+                p-id="2362"
+              ></path>
+            </svg>
+          </Dropdown>
           <Button>Import</Button>
           <Upload onChange={handleImport} maxCount={1} showUploadList={false} beforeUpload={() => false}>
             <Button>Import</Button>
