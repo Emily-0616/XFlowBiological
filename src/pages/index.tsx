@@ -282,21 +282,20 @@ const Index = () => {
 
       // 点击连接桩生成节点
       const createParentNode = (child: EventArgs['node:port:click']) => {
-        console.log(child);
-        const currentNode = selectNodeRef.current as Node;
+        const { x, y } = child.cell.position();
         const currentPorts = child.cell.ports.items.find((item) => item.id === child.port);
+        console.log(currentPorts);
         // 点击上方连接桩
         if (currentPorts?.group === 'top') {
-          const maleNode = createNode(child.x - 120, child.y - 150, 'Male');
-          const femaleNode = createNode(child.x + 60, child.y - 150, 'Female');
+          const maleNode = createNode(x - 100, y - 150, 'Male');
+          const femaleNode = createNode(x + 100, y - 150, 'Female');
           addEdge(maleNode.id, maleNode.ports.items.find((item) => item.group === 'right')?.id, child.cell.id, child.port);
           addEdge(femaleNode.id, femaleNode.ports.items.find((item) => item.group === 'left')?.id, child.cell.id, child.port);
         }
         // 点击右侧连接桩
         if (currentPorts?.group === 'right') {
-          console.log(child.y);
-          const brotherNode = createNode(child.x + 120, child.y, AddNodeGenderMap[child.node.data?.Gender as AddNodeGenderMap]);
-          const childNode = createNode(child.x + 30, child.y + 150, 'Unknown');
+          const brotherNode = createNode(x + 200, y, AddNodeGenderMap[child.node.data?.Gender as AddNodeGenderMap]);
+          const childNode = createNode(x + 100, y + 150, 'Unknown');
           addEdge(child.cell.id, child.port, childNode.id, childNode.ports.items.find((item) => item.group === 'top')?.id);
           addEdge(
             brotherNode.id,
@@ -307,8 +306,8 @@ const Index = () => {
         }
         // 点击左侧连接桩
         if (currentPorts?.group === 'left') {
-          const brotherNode = createNode(child.x - 180, child.y - 1.5, AddNodeGenderMap[child.node.data?.Gender as AddNodeGenderMap]);
-          const childNode = createNode(child.x - 90, child.y + 150, 'Unknown');
+          const brotherNode = createNode(x - 200, y, AddNodeGenderMap[child.node.data?.Gender as AddNodeGenderMap]);
+          const childNode = createNode(x - 100, y + 150, 'Unknown');
           addEdge(child.cell.id, child.port, childNode.id, childNode.ports.items.find((item) => item.group === 'top')?.id);
           addEdge(
             brotherNode.id,
@@ -319,7 +318,7 @@ const Index = () => {
         }
         // 点击下方连接桩
         if (currentPorts?.group === 'bottom') {
-          const childNode = createNode(child.x - -2, child.y + 120, 'Unknown');
+          const childNode = createNode(x, y + 150, 'Unknown');
           addEdge(child.cell.id, child.port, childNode.id, childNode.ports.items.find((item) => item.group === 'top')?.id);
         }
       };
@@ -440,8 +439,9 @@ const Index = () => {
       </div>
       <div
         css={css`
-          display: flex;
           flex: 1;
+          height: 100%;
+          display: flex;
         `}
       >
         <div
