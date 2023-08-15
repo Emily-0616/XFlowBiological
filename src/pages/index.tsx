@@ -23,7 +23,7 @@ enum AddNodeGenderMap {
   'Female' = 'Male',
 }
 
-type labelKey = 'CustomDeleteLabel'
+type labelKey = 'CustomDeleteLabel' | 'CustomDeleteLabel_bottom'
 
 register({
   shape: 'MainNode',
@@ -147,14 +147,16 @@ const Index = () => {
           onEdgeLabelRendered: args => {
             const { selectors,label } = args
             const content = selectors.foContent as HTMLDivElement
-            if (content && label.data === 'CustomDeleteLabel') {
+            if (content && (label.data === 'CustomDeleteLabel' || label.data === 'CustomDeleteLabel_bottom')) {
               content.style.display = 'flex'
               content.style.alignItems = 'center'
               content.style.justifyContent = 'center'
               content.style.width = '50px'
               content.style.height = '12px'
               content.style.lineHeight = '12px'
-              content.style.transform = 'translate(-17px,-15px)'
+              content.style.outline = 'none'
+              content.style.transform =
+                label.data === 'CustomDeleteLabel' ? 'translate(-17px,-15px)' : 'translate(-24px, -10px)';
               ReactDOM.createRoot(content).render(<CustomDeleteLabel />)
             }
         }
@@ -258,7 +260,16 @@ const Index = () => {
             AddNodeGenderMap[child.node.data?.Gender as AddNodeGenderMap]
           );
           const childNode = createNode(child.x + 30, child.y + 150, 'Unknown');
-          addEdge(child.cell.id, child.port, childNode.id, childNode.ports.items.find((item) => item.group === 'top')?.id);
+          addEdge(
+            child.cell.id,
+            child.port,
+            childNode.id,
+            childNode.ports.items.find(item => item.group === 'top')?.id,
+            {
+              position: 50,
+              data: 'CustomDeleteLabel',
+            }
+          )
           addEdge(
             brotherNode.id,
             brotherNode.ports.items.find((item) => item.group === 'left')?.id,
@@ -273,17 +284,29 @@ const Index = () => {
             AddNodeGenderMap[child.node.data?.Gender as AddNodeGenderMap]
           );
           const childNode = createNode(child.x - 90, child.y + 150, 'Unknown');
-          addEdge(child.cell.id, child.port, childNode.id, childNode.ports.items.find((item) => item.group === 'top')?.id);
+          addEdge(
+            child.cell.id,
+            child.port,
+            childNode.id,
+            childNode.ports.items.find(item => item.group === 'top')?.id
+          )
           addEdge(
             brotherNode.id,
             brotherNode.ports.items.find((item) => item.group === 'right')?.id,
             childNode.id,
-            childNode.ports.items.find((item) => item.group === 'top')?.id
+            childNode.ports.items.find((item) => item.group === 'top')?.id,
+            {
+              position: 50,
+              data: 'CustomDeleteLabel',
+            }
           );
           // 点击下方连接桩
         } else if (child.port === child.view.cell.ports.items.find((item) => item.group === 'bottom')?.id) {
           const childNode = createNode(child.x - (CREATE_NODE_SIZE.width / 2 ?? 0) - 2, child.y + 120, 'Unknown');
-          addEdge(child.cell.id, child.port, childNode.id, childNode.ports.items.find((item) => item.group === 'top')?.id);
+          addEdge(child.cell.id, child.port, childNode.id, childNode.ports.items.find((item) => item.group === 'top')?.id,{
+            position: 50,
+            data: 'CustomDeleteLabel_bottom',
+          });
         }
       };
 
