@@ -70,11 +70,18 @@ const Index = () => {
 
   const deleteNode = (id: string) => {
     const findDeleteItem = nodeRecordRef.current.find(item => item.id === id)
-    findDeleteItem?.nodeList.forEach(item => {
-      graphRef.current?.removeNode(item)
+    // const findAllConnentNode = findDeleteItem?.nodeList.reduce((pre: string[], cur) => {
+    //   const connentNodeList = graphRef.current?.getConnectedEdges(cur, { deep: true })
+    //   Array.isArray(connentNodeList) && pre.push(...connentNodeList.map(edge => edge.id))
+    //   return pre
+    // }, [])
+   
+    // 删除记录上的节点和线
+    findDeleteItem?.nodeList.forEach(node => {
+      graphRef.current?.removeNode(node)
     })
-    findDeleteItem?.edgeList.forEach(item => {
-      graphRef.current?.removeEdge(item)
+    findDeleteItem?.edgeList.forEach(edge => {
+      graphRef.current?.removeEdge(edge)
     })
 
     const copied = nodeRecordRef.current.filter(item => item.id !== id)
@@ -86,7 +93,6 @@ const Index = () => {
     copied.push(addItem)
     nodeRecordRef.current = [...copied]
   }
-
 
   const containerRefCallback = useCallback((node: any) => {
     if (node) {
@@ -265,11 +271,12 @@ const Index = () => {
 
       // 点击连接桩生成节点
       const createParentNode = (child: EventArgs['node:port:click']) => {
-        if (!graphRef.current) return
+        const { x, y } = child.cell.position();
+        const currentPorts = child.cell.ports.items.find((item) => item.id === child.port);
         // 点击上方连接桩
-        if (child.port === child.view.cell.ports.items.find(item => item.group === 'top')?.id) {
-          const maleNode = createNode(child.x - 120, child.y - 150, 'Male')
-          const femaleNode = createNode(child.x + 60, child.y - 150, 'Female')
+        if (currentPorts?.group === 'top') {
+          const maleNode = createNode(x - 100, y - 150, 'Male')
+          const femaleNode = createNode(x + 100, y - 150, 'Female')
           const edge1 = addEdge(
             maleNode.id,
             maleNode.ports.items.find(item => item.group === 'right')?.id,
@@ -293,13 +300,14 @@ const Index = () => {
             })
 
           // 点击右侧连接桩
-        } else if (child.port === child.view.cell.ports.items.find(item => item.group === 'right')?.id) {
+        }
+        if (currentPorts?.group === 'right') {
           const brotherNode = createNode(
-            child.x + 120,
-            child.y - CREATE_NODE_SIZE.height / 2 + 1.5,
+            x + 200,
+            y ,
             AddNodeGenderMap[child.node.data?.Gender as AddNodeGenderMap]
           )
-          const childNode = createNode(child.x + 30, child.y + 150, 'Unknown')
+          const childNode = createNode(x + 100, y + 150, 'Unknown')
           const edge1 = addEdge(
             child.cell.id,
             child.port,
@@ -326,13 +334,14 @@ const Index = () => {
             })
 
           // 点击左侧连接桩
-        } else if (child.port === child.view.cell.ports.items.find(item => item.group === 'left')?.id) {
+        }
+        if (currentPorts?.group === 'left') {
           const brotherNode = createNode(
-            child.x - 180,
-            child.y - (CREATE_NODE_SIZE.height / 2 ?? 0) + 1.5,
+            x - 200,
+            y ,
             AddNodeGenderMap[child.node.data?.Gender as AddNodeGenderMap]
           )
-          const childNode = createNode(child.x - 90, child.y + 150, 'Unknown')
+          const childNode = createNode(x - 100, y + 150, 'Unknown')
           const edge1 = addEdge(
             child.cell.id,
             child.port,
@@ -359,8 +368,9 @@ const Index = () => {
             })
 
           // 点击下方连接桩
-        } else if (child.port === child.view.cell.ports.items.find(item => item.group === 'bottom')?.id) {
-          const childNode = createNode(child.x - (CREATE_NODE_SIZE.width / 2 ?? 0) - 2, child.y + 120, 'Unknown')
+        }
+        if (currentPorts?.group === 'bottom') {
+          const childNode = createNode(x, y + 150, 'Unknown')
           const edge = addEdge(
             child.cell.id,
             child.port,
