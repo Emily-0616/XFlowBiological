@@ -187,7 +187,8 @@ const Index = () => {
             content.style.height = '12px';
             content.style.lineHeight = '12px';
             content.style.outline = 'none';
-            content.style.transform = label.data === 'CustomDeleteLabel' ? 'translate(-17px,-15px)' : 'translate(-24px, -10px)';
+            content.style.transform =
+              label.data === 'CustomDeleteLabel' ? 'translate(-17px,-15px)' : 'translate(-24px, -10px)';
             ReactDOM.createRoot(content).render(<CustomDeleteLabel id={edge.id} onDelete={deleteNode} />);
           }
         },
@@ -276,11 +277,22 @@ const Index = () => {
         if (currentPorts?.group === 'top') {
           const maleNode = createNode(x - 100, y - 150, 'Male');
           const femaleNode = createNode(x + 100, y - 150, 'Female');
-          const edge1 = addEdge(maleNode.id, maleNode.ports.items.find((item) => item.group === 'right')?.id, child.cell.id, child.port, {
-            position: 50,
-            data: 'CustomDeleteLabel',
-          });
-          const edge2 = addEdge(femaleNode.id, femaleNode.ports.items.find((item) => item.group === 'left')?.id, child.cell.id, child.port);
+          const edge1 = addEdge(
+            maleNode.id,
+            maleNode.ports.items.find((item) => item.group === 'right')?.id,
+            child.cell.id,
+            child.port,
+            {
+              position: 60,
+              data: 'CustomDeleteLabel',
+            }
+          );
+          const edge2 = addEdge(
+            femaleNode.id,
+            femaleNode.ports.items.find((item) => item.group === 'left')?.id,
+            child.cell.id,
+            child.port
+          );
 
           edge1?.id &&
             edge2?.id &&
@@ -289,16 +301,21 @@ const Index = () => {
               nodeList: [maleNode.id, femaleNode.id],
               edgeList: [edge1.id, edge2.id],
             });
-
-          // 点击右侧连接桩
         }
+        // 点击右侧连接桩
         if (currentPorts?.group === 'right') {
           const brotherNode = createNode(x + 200, y, AddNodeGenderMap[child.node.data?.Gender as AddNodeGenderMap]);
           const childNode = createNode(x + 100, y + 150, 'Unknown');
-          const edge1 = addEdge(child.cell.id, child.port, childNode.id, childNode.ports.items.find((item) => item.group === 'top')?.id, {
-            position: 50,
-            data: 'CustomDeleteLabel',
-          });
+          const edge1 = addEdge(
+            child.cell.id,
+            child.port,
+            childNode.id,
+            childNode.ports.items.find((item) => item.group === 'top')?.id,
+            {
+              position: 60,
+              data: 'CustomDeleteLabel',
+            }
+          );
           const edge2 = addEdge(
             brotherNode.id,
             brotherNode.ports.items.find((item) => item.group === 'left')?.id,
@@ -313,20 +330,24 @@ const Index = () => {
               nodeList: [brotherNode.id, childNode.id],
               edgeList: [edge1.id, edge2.id],
             });
-
-          // 点击左侧连接桩
         }
+        // 点击左侧连接桩
         if (currentPorts?.group === 'left') {
           const brotherNode = createNode(x - 200, y, AddNodeGenderMap[child.node.data?.Gender as AddNodeGenderMap]);
           const childNode = createNode(x - 100, y + 150, 'Unknown');
-          const edge1 = addEdge(child.cell.id, child.port, childNode.id, childNode.ports.items.find((item) => item.group === 'top')?.id);
+          const edge1 = addEdge(
+            child.cell.id,
+            child.port,
+            childNode.id,
+            childNode.ports.items.find((item) => item.group === 'top')?.id
+          );
           const edge2 = addEdge(
             brotherNode.id,
             brotherNode.ports.items.find((item) => item.group === 'right')?.id,
             childNode.id,
             childNode.ports.items.find((item) => item.group === 'top')?.id,
             {
-              position: 50,
+              position: 60,
               data: 'CustomDeleteLabel',
             }
           );
@@ -338,15 +359,20 @@ const Index = () => {
               nodeList: [brotherNode.id, childNode.id],
               edgeList: [edge1.id, edge2.id],
             });
-
-          // 点击下方连接桩
         }
+        // 点击下方连接桩
         if (currentPorts?.group === 'bottom') {
           const childNode = createNode(x, y + 150, 'Unknown');
-          const edge = addEdge(child.cell.id, child.port, childNode.id, childNode.ports.items.find((item) => item.group === 'top')?.id, {
-            position: 50,
-            data: 'CustomDeleteLabel_bottom',
-          });
+          const edge = addEdge(
+            child.cell.id,
+            child.port,
+            childNode.id,
+            childNode.ports.items.find((item) => item.group === 'top')?.id,
+            {
+              position: 60,
+              data: 'CustomDeleteLabel_bottom',
+            }
+          );
 
           edge?.id &&
             pushNodeRecord({
@@ -452,16 +478,14 @@ const Index = () => {
         display: flex;
         height: 100%;
         flex-direction: column;
-      `}
-    >
+      `}>
       <div
         css={css`
           height: 40px;
           padding: 0 20px;
           display: flex;
           align-items: center;
-        `}
-      >
+        `}>
         <Space wrap>
           <Tooltip title="保存">
             <Button type="text" icon={<SaveOutlined />} onClick={handleSave} />
@@ -478,14 +502,12 @@ const Index = () => {
                   key: 'en',
                 },
               ],
-            }}
-          >
+            }}>
             <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="20" height="20">
               <path
                 d="M547.797333 638.208l-104.405333-103.168 1.237333-1.28a720.170667 720.170667 0 0 0 152.490667-268.373333h120.448V183.082667h-287.744V100.906667H347.605333v82.218666H59.818667V265.386667h459.178666a648.234667 648.234667 0 0 1-130.304 219.946666 643.242667 643.242667 0 0 1-94.976-137.728H211.541333a722.048 722.048 0 0 0 122.453334 187.434667l-209.194667 206.378667 58.368 58.368 205.525333-205.525334 127.872 127.829334 31.232-83.84m231.424-208.426667h-82.218666l-184.96 493.312h82.218666l46.037334-123.306667h195.242666l46.464 123.306667h82.218667l-185.002667-493.312m-107.690666 287.744l66.56-178.005333 66.602666 178.005333z"
                 fill="#5c5c66"
-                p-id="2362"
-              ></path>
+                p-id="2362"></path>
             </svg>
           </Dropdown>
           <Button>Import</Button>
@@ -500,14 +522,12 @@ const Index = () => {
           flex: 1;
           height: 100%;
           display: flex;
-        `}
-      >
+        `}>
         <div
           css={css`
             flex: 1;
           `}
-          ref={containerRefCallback}
-        ></div>
+          ref={containerRefCallback}></div>
       </div>
     </div>
   );
