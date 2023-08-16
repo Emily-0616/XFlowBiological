@@ -510,11 +510,11 @@ const Index = () => {
                 p-id="2362"></path>
             </svg>
           </Dropdown>
-          <Button>Import</Button>
+          <Button onClick={handleSave}>导出图片</Button>
           <Upload onChange={handleImport} maxCount={1} showUploadList={false} beforeUpload={() => false}>
-            <Button>Import</Button>
+            <Button>导入json</Button>
           </Upload>
-          <Button onClick={handleSaveJson}>JSON</Button>
+          <Button onClick={handleSaveJson}>保存json</Button>
         </Space>
       </div>
       <div
