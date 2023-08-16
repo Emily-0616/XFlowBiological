@@ -164,7 +164,7 @@ const SettingNode = ({ node, graph }: { node: Node<Node.Properties>; graph: Grap
                       { label: t('settingNode.PersonalOptions.Gender.Female'), value: 'Female' },
                       { label: t('settingNode.PersonalOptions.Gender.Unknown'), value: 'Unknown' },
                     ]}
-                  ></Radio.Group>
+                  />
                 </Col>
               </Row>
               {/* name */}
@@ -245,7 +245,7 @@ const SettingNode = ({ node, graph }: { node: Node<Node.Properties>; graph: Grap
                         width: 100%;
                       `}
                       onChange={(event) => onChangeData({ key: 'GestationAge', value: event })}
-                    ></Select>
+                    />
                   </Col>
                 </Row>
               )}
@@ -280,7 +280,7 @@ const SettingNode = ({ node, graph }: { node: Node<Node.Properties>; graph: Grap
                       css={css`
                         width: 100%;
                       `}
-                    ></Select>
+                    />
                   </Col>
                   <Col span={12}>
                     <Input value={data.heredityText} onChange={(event) => onChangeData({ key: 'heredityText', value: event.target.value })} />
@@ -307,7 +307,7 @@ const SettingNode = ({ node, graph }: { node: Node<Node.Properties>; graph: Grap
                       { label: 'Female', value: 'Female' },
                       { label: 'Unknown', value: 'Unknown' },
                     ]}
-                  ></Radio.Group>
+                  />
                 </Col>
               </Row>
               <Row gutter={[0, 8]}>
@@ -324,7 +324,7 @@ const SettingNode = ({ node, graph }: { node: Node<Node.Properties>; graph: Grap
                       { label: 'Carrier', value: 'Carrier' },
                       { label: 'Pre-symptomatic', value: 'Pre-symptomatic' },
                     ]}
-                  ></Radio.Group>
+                  />
                 </Col>
                 <Col>
                   <Checkbox>Documented evaluation</Checkbox>
