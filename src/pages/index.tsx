@@ -437,7 +437,7 @@ const Index = () => {
         node.remove();
         clearNode();
       });
-      graphRef.current.on('settingNode:change', (node: Node<Node.Properties>, data) => {
+      graphRef.current.on('settingNode:change', (_: Node<Node.Properties>, data) => {
         selectNodeRef.current?.setData({
           ...data,
         });
