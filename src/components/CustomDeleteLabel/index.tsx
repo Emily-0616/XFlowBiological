@@ -1,32 +1,21 @@
-import { css } from '@emotion/react'
-import { FC } from 'react'
+import { FC } from 'react';
+import { Button } from 'antd';
 
 interface Props {
-  id: string
-  onDelete: (id: string) => void
+  id: string;
+  onDelete: (id: string) => void;
 }
 
-const CustomDeleteLabel: FC<Props> = props => {
-  const CustomDeleteLabelStyled = css`
-    width: 50px;
-    height: 12px;
-    line-height: 12px;
-    background-color: red;
-    border-radius: 5px;
-    font-size: 10px;
-    text-align: center;
-  `
-
+const CustomDeleteLabel: FC<Props> = (props) => {
   return (
-    <div
-      css={CustomDeleteLabelStyled}
+    <Button
+      size="small"
       onClick={() => {
-        typeof props.onDelete === 'function' && props.onDelete(props.id)
-      }}
-    >
+        typeof props.onDelete === 'function' && props.onDelete(props.id);
+      }}>
       remove
-    </div>
-  )
-}
+    </Button>
+  );
+};
 
-export default CustomDeleteLabel
+export default CustomDeleteLabel;

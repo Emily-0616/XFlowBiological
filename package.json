@@ -21,7 +21,7 @@
     "@antv/x6-react-components": "^2.0.8",
     "@antv/x6-react-shape": "^2.2.2",
     "@emotion/react": "^11.11.1",
-    "antd": "^5.7.3",
+    "antd": "^5.8.3",
     "dayjs": "^1.11.9",
     "file-saver": "^2.0.5",
     "i18next": "^23.4.4",

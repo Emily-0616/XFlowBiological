@@ -177,18 +177,20 @@ const Index = () => {
           edgeLabelMovable: false,
         }),
         onEdgeLabelRendered: (args) => {
+          // 通过 foreignObject 插入 react 节点 生成自定义 label
+          // 避免被遮挡 需要控制生成 label 的线条渲染顺序排最后
           const { selectors, label, edge } = args;
           const content = selectors.foContent as HTMLDivElement;
           if (content && (label.data === 'CustomDeleteLabel' || label.data === 'CustomDeleteLabel_bottom')) {
             content.style.display = 'flex';
             content.style.alignItems = 'center';
             content.style.justifyContent = 'center';
-            content.style.width = '50px';
-            content.style.height = '12px';
-            content.style.lineHeight = '12px';
+            content.style.width = '80px';
+            content.style.height = '40px';
+            content.style.padding = '10px';
             content.style.outline = 'none';
             content.style.transform =
-              label.data === 'CustomDeleteLabel' ? 'translate(-17px,-15px)' : 'translate(-24px, -10px)';
+              label.data === 'CustomDeleteLabel' ? 'translate(-32px,-22px)' : 'translate(-40px, -50px)';
             ReactDOM.createRoot(content).render(<CustomDeleteLabel id={edge.id} onDelete={deleteNode} />);
           }
         },
@@ -277,6 +279,12 @@ const Index = () => {
         if (currentPorts?.group === 'top') {
           const maleNode = createNode(x - 100, y - 150, 'Male');
           const femaleNode = createNode(x + 100, y - 150, 'Female');
+          const edge2 = addEdge(
+            femaleNode.id,
+            femaleNode.ports.items.find((item) => item.group === 'left')?.id,
+            child.cell.id,
+            child.port
+          );
           const edge1 = addEdge(
             maleNode.id,
             maleNode.ports.items.find((item) => item.group === 'right')?.id,
@@ -286,12 +294,6 @@ const Index = () => {
               position: 60,
               data: 'CustomDeleteLabel',
             }
-          );
-          const edge2 = addEdge(
-            femaleNode.id,
-            femaleNode.ports.items.find((item) => item.group === 'left')?.id,
-            child.cell.id,
-            child.port
           );
 
           edge1?.id &&
@@ -306,6 +308,12 @@ const Index = () => {
         if (currentPorts?.group === 'right') {
           const brotherNode = createNode(x + 200, y, AddNodeGenderMap[child.node.data?.Gender as AddNodeGenderMap]);
           const childNode = createNode(x + 100, y + 150, 'Unknown');
+          const edge2 = addEdge(
+            brotherNode.id,
+            brotherNode.ports.items.find((item) => item.group === 'left')?.id,
+            childNode.id,
+            childNode.ports.items.find((item) => item.group === 'top')?.id
+          );
           const edge1 = addEdge(
             child.cell.id,
             child.port,
@@ -315,12 +323,6 @@ const Index = () => {
               position: 60,
               data: 'CustomDeleteLabel',
             }
-          );
-          const edge2 = addEdge(
-            brotherNode.id,
-            brotherNode.ports.items.find((item) => item.group === 'left')?.id,
-            childNode.id,
-            childNode.ports.items.find((item) => item.group === 'top')?.id
           );
 
           edge1?.id &&
