@@ -15,6 +15,7 @@ import CustomDeleteLabel from '../components/CustomDeleteLabel';
 import MainNode from '../components/MainNode';
 import SettingNode from '../components/SettingNode';
 import { ports } from '../data/default';
+import { isMobile } from '../utils/isMobile';
 
 /** @description 新增兄弟节点时判断输出什么属性 */
 enum AddNodeGenderMap {
@@ -70,11 +71,6 @@ const Index = () => {
 
   const deleteNode = (id: string) => {
     const findDeleteItem = nodeRecordRef.current.find((item) => item.id === id);
-    // const findAllConnentNode = findDeleteItem?.nodeList.reduce((pre: string[], cur) => {
-    //   const connentNodeList = graphRef.current?.getConnectedEdges(cur, { deep: true })
-    //   Array.isArray(connentNodeList) && pre.push(...connentNodeList.map(edge => edge.id))
-    //   return pre
-    // }, [])
 
     // 删除记录上的节点和线
     findDeleteItem?.nodeList.forEach((node) => {
