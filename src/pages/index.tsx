@@ -10,12 +10,14 @@ import { css } from '@emotion/react';
 import { Button, Dropdown, Space, Tooltip, Upload } from 'antd';
 import { Dayjs } from 'dayjs';
 import fs from 'file-saver';
+import i18next from 'i18next';
 import { useCallback, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import CustomDeleteLabel from '../components/CustomDeleteLabel';
 import MainNode from '../components/MainNode';
 import SettingNode from '../components/SettingNode';
 import { ports } from '../data/default';
+import { updateSearchParams } from '../utils/updateSearchParams';
 
 /** @description 新增兄弟节点时判断输出什么属性 */
 enum AddNodeGenderMap {
@@ -96,6 +98,7 @@ const Index = () => {
   const settingNodeRef = useRef<Node | undefined>(undefined);
   const selectNodeRef = useRef<Node | undefined>(undefined);
   const nodeRecordRef = useRef<NodeRecord[]>([]);
+  const searchParams = new URLSearchParams();
 
   const clearNode = () => {
     settingNodeRef.current = undefined;
@@ -534,10 +537,18 @@ const Index = () => {
                 {
                   label: '简中',
                   key: 'zh-cn',
+                  onClick: () => {
+                    i18next.changeLanguage('zh');
+                    updateSearchParams({ local: 'zh' });
+                  },
                 },
                 {
                   label: '英文',
                   key: 'en',
+                  onClick: () => {
+                    i18next.changeLanguage('en');
+                    updateSearchParams({ local: 'en' });
+                  },
                 },
               ],
             }}>

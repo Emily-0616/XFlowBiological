@@ -160,6 +160,7 @@ const SettingNode = ({ node, graph }: { node: Node<Node.Properties>; graph: Grap
                   </Col>
                   <Col span={12}>
                     <DatePicker
+                      placeholder={t('settingNode.PersonalOptions.DatePlaceholder')}
                       value={data.DateOfBirth}
                       css={css`
                         width: 100%;
@@ -169,6 +170,7 @@ const SettingNode = ({ node, graph }: { node: Node<Node.Properties>; graph: Grap
                   </Col>
                   <Col span={12}>
                     <DatePicker
+                      placeholder={t('settingNode.PersonalOptions.DatePlaceholder')}
                       value={data.DateOfDeath}
                       css={css`
                         width: 100%;
