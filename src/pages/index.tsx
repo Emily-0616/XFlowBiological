@@ -76,6 +76,7 @@ const Index = () => {
 
   const clearNode = () => {
     settingNodeRef.current = undefined;
+    selectNodeRef.current = undefined;
   };
 
   const deleteNode = (id: string) => {
@@ -406,11 +407,15 @@ const Index = () => {
           }
         }
       };
-      graphRef.current.on('node:mouseenter', () => {
-        showPorts(graphRef.current?.getNodes(), true);
+      graphRef.current.on('node:mouseenter', (event) => {
+        if (event.cell.shape === 'MainNode') {
+          showPorts(graphRef.current?.getNodes(), true);
+        } else {
+          showPorts(graphRef.current?.getNodes(), false);
+        }
       });
-      graphRef.current.on('node:mouseleave', () => {
-        showPorts(graphRef.current?.getNodes(), false);
+      graphRef.current.on('node:mouseleave', (event) => {
+          showPorts(graphRef.current?.getNodes(), false);
       });
       graphRef.current.on('node:selected', (event) => {
         selectNodeRef.current = event.node;
