@@ -11,11 +11,7 @@
         "Female": "女性",
         "Unknown": "未知"
       },
-      "FirstName": "名",
-      "LastName": "姓",
-      "LastNameAtBirth": "出生时姓氏",
-      "ExternalID": "外部编码",
-      "Ethnicities": "种族",
+      "Name": "姓名",
       "DateOfBirth": "出生日期",
       "DateOfDeath": "死亡日期",
       "IndividualIs": {

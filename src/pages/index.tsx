@@ -1,5 +1,5 @@
 import { SaveOutlined } from '@ant-design/icons';
-import { Cell, EventArgs, Graph, Node } from '@antv/x6';
+import { EventArgs, Graph, Node } from '@antv/x6';
 import { Export } from '@antv/x6-plugin-export';
 import { History } from '@antv/x6-plugin-history';
 import { Keyboard } from '@antv/x6-plugin-keyboard';
@@ -15,7 +15,6 @@ import CustomDeleteLabel from '../components/CustomDeleteLabel';
 import MainNode from '../components/MainNode';
 import SettingNode from '../components/SettingNode';
 import { ports } from '../data/default';
-import { isMobile } from '../utils/isMobile';
 
 /** @description 新增兄弟节点时判断输出什么属性 */
 enum AddNodeGenderMap {
@@ -49,6 +48,7 @@ register({
       event: 'node:delete',
     },
   },
+  effect:['data']
 });
 
 // 点击连接桩生成的 MainNode 尺寸
@@ -57,15 +57,24 @@ const CREATE_NODE_SIZE = {
   height: 60,
 };
 
+  const SETTING_INIT_DATA = {
+    Gender: 'Unknown',
+    DateOfBirth: null,
+    DateOfDeath: null,
+    AdoptedIn: false,
+    GestationAge: '-',
+    IndividualIs: 'Alive',
+    Name:''
+  }
+
 const Index = () => {
   const graphRef = useRef<Graph | undefined>(undefined);
-  const settingNodeRef = useRef<Cell | undefined>(undefined);
   const containerRef = useRef<HTMLDivElement | undefined>(undefined);
-  const selectNodeRef = useRef<Cell | undefined>(undefined);
+  const settingNodeRef = useRef<Node | undefined>(undefined);
+  const selectNodeRef = useRef<Node | undefined>(undefined);
   const nodeRecordRef = useRef<NodeRecord[]>([]);
 
   const clearNode = () => {
-    selectNodeRef.current = undefined;
     settingNodeRef.current = undefined;
   };
 
@@ -171,6 +180,9 @@ const Index = () => {
         },
         interacting: () => ({
           edgeLabelMovable: false,
+          nodeMovable: (event) => {
+            return event.cell.shape === 'SettingNode'?false:true
+          }
         }),
         onEdgeLabelRendered: (args) => {
           // 通过 foreignObject 插入 react 节点 生成自定义 label
@@ -228,19 +240,17 @@ const Index = () => {
           width: 60,
           height: 60,
         },
-        data: {
-          Gender: 'Unknown',
-        },
         ports: { ...ports },
+        data:SETTING_INIT_DATA
       });
-
+      // 点击连接桩生成节点，动态修改gender 默认值
       const createNode = (x: number, y: number, gender: string): Node<Node.Properties> => {
         return graphRef.current!.addNode({
           shape: 'MainNode',
           x,
           y,
           size: CREATE_NODE_SIZE,
-          data: { Gender: gender },
+          data: { ...SETTING_INIT_DATA , Gender: gender },
           ports: { ...ports },
         });
       };
@@ -402,27 +412,23 @@ const Index = () => {
       graphRef.current.on('node:mouseleave', () => {
         showPorts(graphRef.current?.getNodes(), false);
       });
-
-      graphRef.current.on('node:click', (event) => {
-        if (event.e.target.nodeName === 'circle') return;
-        // 如果当前不存在settingNode 的情况下跟据当前点击的node 坐标生成id
-        if (!settingNodeRef.current) {
+      graphRef.current.on('node:selected', (event) => {
+        selectNodeRef.current = event.node;
+        // 判断是否存在seetingNode 存在则修改定位跟data。否则则生成节点
+        if (settingNodeRef.current) {
+          settingNodeRef.current.setPosition({ x: event.node.position().x + 80, y: event.node.position().y })
+          settingNodeRef.current.setData(event.cell.data)
+        } else {
           settingNodeRef.current = graphRef.current?.addNode({
-            x: event.x + 60,
-            y: event.y - 20,
-            shape: 'SettingNode',
-            data: {
-              enableMove: false,
+          x: event.node.getPosition().x + 80,
+          y: event.node.position().y ,
+          shape: 'SettingNode',
+          data: {
+            ...event.cell.data
             },
           });
-          // 生成了settingNode 以后记录选中的node
-          selectNodeRef.current = event.cell;
         }
-        // 如果settingNode 存在并且被点击的情况下，框选父节点
-        if (selectNodeRef.current && event.cell.shape === 'SettingNode') {
-          graphRef.current?.select(selectNodeRef.current.id);
-        }
-      });
+      })
       graphRef.current.on('blank:click', () => {
         graphRef.current?.cleanSelection();
         if (settingNodeRef.current) {
@@ -435,10 +441,10 @@ const Index = () => {
         node.remove();
         clearNode();
       });
+      // 两个节点都需要动态赋值
       graphRef.current.on('settingNode:change', (_: Node<Node.Properties>, data) => {
-        selectNodeRef.current?.setData({
-          ...data,
-        });
+        settingNodeRef.current?.setData(data)
+        selectNodeRef.current?.setData(data);
       });
       graphRef.current.on('node:port:click', (node: EventArgs['node:port:click']) => {
         createParentNode(node);

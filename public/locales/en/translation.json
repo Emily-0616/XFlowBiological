@@ -11,11 +11,7 @@
         "Female": "Female",
         "Unknown": "Unknown"
       },
-      "FirstName": "First name",
-      "LastName": "Last name",
-      "LastNameAtBirth": "Last name at birth",
-      "ExternalID": "External ID",
-      "Ethnicities": "Ethnicities",
+      "Name": "Name",
       "DateOfBirth": "Date of birth",
       "DateOfDeath": "Date of death",
       "IndividualIs": {

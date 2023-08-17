@@ -20,8 +20,7 @@ type HeredityTypes = 'None' | 'Childless' | 'Infertile';
 type IndividualTypes = 'Alive' | 'Deceased' | 'Unborn' | 'Stillborn' | 'Miscarriage' | 'Aborted';
 type DataTypes = {
   Gender: 'Male' | 'Female' | 'Unknown';
-  FirstName?: string;
-  LastName?: string;
+  Name?: string;
   LastNameAtBirth?: string;
   ExternalID?: string;
   Ethnicities?: string;
@@ -33,11 +32,11 @@ type DataTypes = {
   AdoptedIn: boolean;
   GestationAge?: string;
 };
-const SettingNode = ({ node, graph }: { node: Node<Node.Properties>; graph: Graph }) => {
+const SettingNode = ({ node, graph }: { node: Node<Node.Properties>; graph: Graph; }) => {
+  console.log(node.data);
+
   const { t } = useTranslation();
-
   const [tabActiveKey, setTabActiveKey] = useState<'Personal' | 'Clinical'>('Personal');
-
   const tabOptiosn = [
     {
       label: t('settingNode.tabOptiosn.Personal'),
@@ -90,15 +89,7 @@ const SettingNode = ({ node, graph }: { node: Node<Node.Properties>; graph: Grap
     },
   ];
 
-  const [data, setData] = useState<DataTypes>({
-    Gender: 'Unknown',
-    DateOfBirth: null,
-    DateOfDeath: null,
-    AdoptedIn: false,
-    GestationAge: '-',
-    IndividualIs: 'Alive',
-  });
-
+  const data = node.getData();
   const gestationAgeOptions = () => {
     const data = [];
     for (let index = 0; index < 51; index++) {
@@ -119,7 +110,6 @@ const SettingNode = ({ node, graph }: { node: Node<Node.Properties>; graph: Grap
 
   const onChangeData = ({ key, value }: { key: string; value: string | Dayjs | null }) => {
     const newData = { ...data, [key]: value };
-    setData(newData);
     graph.trigger('settingNode:change', node, newData);
   };
 
@@ -169,39 +159,11 @@ const SettingNode = ({ node, graph }: { node: Node<Node.Properties>; graph: Grap
               </Row>
               {/* name */}
               <Row gutter={[12, 8]}>
-                <Col span={12}>
-                  <div>{t('settingNode.PersonalOptions.FirstName')}</div>
-                </Col>
-                <Col span={12}>
-                  <div>{t('settingNode.PersonalOptions.LastName')}</div>
-                </Col>
-                <Col span={12}>
-                  <Input value={data.FirstName} onChange={(event) => onChangeData({ key: 'FirstName', value: event.target.value })} />
-                </Col>
-                <Col span={12}>
-                  <Input value={data.LastName} onChange={(event) => onChangeData({ key: 'LastName', value: event.target.value })} />
-                </Col>
-              </Row>
-              <Row gutter={[12, 8]}>
-                <Col span={12}>
-                  <div>{t('settingNode.PersonalOptions.LastNameAtBirth')}</div>
-                </Col>
-                <Col span={12}>
-                  <div>{t('settingNode.PersonalOptions.ExternalID')}</div>
-                </Col>
-                <Col span={12}>
-                  <Input value={data.LastNameAtBirth} onChange={(event) => onChangeData({ key: 'LastName', value: event.target.value })} />
-                </Col>
-                <Col span={12}>
-                  <Input value={data.ExternalID} onChange={(event) => onChangeData({ key: 'ExternalID', value: event.target.value })} />
-                </Col>
-              </Row>
-              <Row gutter={[12, 8]}>
                 <Col span={24}>
-                  <div>{t('settingNode.PersonalOptions.Ethnicities')}</div>
+                  <div>{t('settingNode.PersonalOptions.Name')}</div>
                 </Col>
                 <Col span={24}>
-                  <Input value={data.Ethnicities} onChange={(event) => onChangeData({ key: 'Ethnicities', value: event.target.value })} />
+                  <Input value={data.Name} onChange={(event) => onChangeData({ key: 'Name', value: event.target.value })} />
                 </Col>
               </Row>
               {(data.IndividualIs === 'Alive' || data.IndividualIs === 'Deceased') && (
