@@ -98,7 +98,6 @@ const Index = () => {
   const settingNodeRef = useRef<Node | undefined>(undefined);
   const selectNodeRef = useRef<Node | undefined>(undefined);
   const nodeRecordRef = useRef<NodeRecord[]>([]);
-  const searchParams = new URLSearchParams();
 
   const clearNode = () => {
     settingNodeRef.current = undefined;
@@ -444,7 +443,7 @@ const Index = () => {
           showPorts(graphRef.current?.getNodes(), false);
         }
       });
-      graphRef.current.on('node:mouseleave', (event) => {
+      graphRef.current.on('node:mouseleave', () => {
         showPorts(graphRef.current?.getNodes(), false);
       });
       graphRef.current.on('node:selected', (event) => {
