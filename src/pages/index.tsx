@@ -138,7 +138,7 @@ const Index = () => {
               radius: 8,
             },
           },
-          anchor: 'midSide',
+          anchor: 'center',
           connectionPoint: 'anchor',
           allowBlank: false,
           allowNode: false,
