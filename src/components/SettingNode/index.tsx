@@ -16,28 +16,9 @@ const MainCss = css`
   width: 100%;
 `;
 
-type HeredityTypes = 'None' | 'Childless' | 'Infertile';
-type IndividualTypes = 'Alive' | 'Deceased' | 'Unborn' | 'Stillborn' | 'Miscarriage' | 'Aborted';
-type DataTypes = {
-  Gender: 'Male' | 'Female' | 'Unknown';
-  FirstName?: string;
-  LastName?: string;
-  LastNameAtBirth?: string;
-  ExternalID?: string;
-  Ethnicities?: string;
-  DateOfBirth: Dayjs | null;
-  DateOfDeath: Dayjs | null;
-  IndividualIs?: IndividualTypes;
-  heredityValue?: HeredityTypes;
-  heredityText?: string;
-  AdoptedIn: boolean;
-  GestationAge?: string;
-};
 const SettingNode = ({ node, graph }: { node: Node<Node.Properties>; graph: Graph }) => {
   const { t } = useTranslation();
-
   const [tabActiveKey, setTabActiveKey] = useState<'Personal' | 'Clinical'>('Personal');
-
   const tabOptiosn = [
     {
       label: t('settingNode.tabOptiosn.Personal'),
@@ -90,15 +71,7 @@ const SettingNode = ({ node, graph }: { node: Node<Node.Properties>; graph: Grap
     },
   ];
 
-  const [data, setData] = useState<DataTypes>({
-    Gender: 'Unknown',
-    DateOfBirth: null,
-    DateOfDeath: null,
-    AdoptedIn: false,
-    GestationAge: '-',
-    IndividualIs: 'Alive',
-  });
-
+  const data = node.getData();
   const gestationAgeOptions = () => {
     const data = [];
     for (let index = 0; index < 51; index++) {
@@ -117,9 +90,8 @@ const SettingNode = ({ node, graph }: { node: Node<Node.Properties>; graph: Grap
     return data;
   };
 
-  const onChangeData = ({ key, value }: { key: string; value: string | Dayjs | null }) => {
+  const onChangeData = ({ key, value }: { key: string; value: string | Dayjs | null | boolean }) => {
     const newData = { ...data, [key]: value };
-    setData(newData);
     graph.trigger('settingNode:change', node, newData);
   };
 
@@ -147,8 +119,7 @@ const SettingNode = ({ node, graph }: { node: Node<Node.Properties>; graph: Grap
           direction="vertical"
           css={css`
             display: flex;
-          `}
-        >
+          `}>
           {tabActiveKey === 'Personal' && (
             <>
               <Row gutter={[0, 8]}>
@@ -169,39 +140,14 @@ const SettingNode = ({ node, graph }: { node: Node<Node.Properties>; graph: Grap
               </Row>
               {/* name */}
               <Row gutter={[12, 8]}>
-                <Col span={12}>
-                  <div>{t('settingNode.PersonalOptions.FirstName')}</div>
-                </Col>
-                <Col span={12}>
-                  <div>{t('settingNode.PersonalOptions.LastName')}</div>
-                </Col>
-                <Col span={12}>
-                  <Input value={data.FirstName} onChange={(event) => onChangeData({ key: 'FirstName', value: event.target.value })} />
-                </Col>
-                <Col span={12}>
-                  <Input value={data.LastName} onChange={(event) => onChangeData({ key: 'LastName', value: event.target.value })} />
-                </Col>
-              </Row>
-              <Row gutter={[12, 8]}>
-                <Col span={12}>
-                  <div>{t('settingNode.PersonalOptions.LastNameAtBirth')}</div>
-                </Col>
-                <Col span={12}>
-                  <div>{t('settingNode.PersonalOptions.ExternalID')}</div>
-                </Col>
-                <Col span={12}>
-                  <Input value={data.LastNameAtBirth} onChange={(event) => onChangeData({ key: 'LastName', value: event.target.value })} />
-                </Col>
-                <Col span={12}>
-                  <Input value={data.ExternalID} onChange={(event) => onChangeData({ key: 'ExternalID', value: event.target.value })} />
-                </Col>
-              </Row>
-              <Row gutter={[12, 8]}>
                 <Col span={24}>
-                  <div>{t('settingNode.PersonalOptions.Ethnicities')}</div>
+                  <div>{t('settingNode.PersonalOptions.Name')}</div>
                 </Col>
                 <Col span={24}>
-                  <Input value={data.Ethnicities} onChange={(event) => onChangeData({ key: 'Ethnicities', value: event.target.value })} />
+                  <Input
+                    value={data.Name}
+                    onChange={(event) => onChangeData({ key: 'Name', value: event.target.value })}
+                  />
                 </Col>
               </Row>
               {(data.IndividualIs === 'Alive' || data.IndividualIs === 'Deceased') && (
@@ -214,6 +160,7 @@ const SettingNode = ({ node, graph }: { node: Node<Node.Properties>; graph: Grap
                   </Col>
                   <Col span={12}>
                     <DatePicker
+                      placeholder={t('settingNode.PersonalOptions.DatePlaceholder')}
                       value={data.DateOfBirth}
                       css={css`
                         width: 100%;
@@ -223,6 +170,7 @@ const SettingNode = ({ node, graph }: { node: Node<Node.Properties>; graph: Grap
                   </Col>
                   <Col span={12}>
                     <DatePicker
+                      placeholder={t('settingNode.PersonalOptions.DatePlaceholder')}
                       value={data.DateOfDeath}
                       css={css`
                         width: 100%;
@@ -283,10 +231,17 @@ const SettingNode = ({ node, graph }: { node: Node<Node.Properties>; graph: Grap
                     />
                   </Col>
                   <Col span={12}>
-                    <Input value={data.heredityText} onChange={(event) => onChangeData({ key: 'heredityText', value: event.target.value })} />
+                    <Input
+                      value={data.heredityText}
+                      onChange={(event) => onChangeData({ key: 'heredityText', value: event.target.value })}
+                    />
                   </Col>
                   <Col>
-                    <Checkbox>{t('settingNode.PersonalOptions.AdoptedIn')}</Checkbox>
+                    <Checkbox
+                      checked={data.AdoptedIn}
+                      onChange={(event) => onChangeData({ key: 'AdoptedIn', value: event.target.checked })}>
+                      {t('settingNode.PersonalOptions.AdoptedIn')}
+                    </Checkbox>
                   </Col>
                 </Row>
               )}
@@ -296,70 +251,76 @@ const SettingNode = ({ node, graph }: { node: Node<Node.Properties>; graph: Grap
             <>
               <Row gutter={[0, 8]}>
                 <Col span={24}>
-                  <div>运营商状态</div>
+                  <div>{t('settingNode.ClinicalOptions.CarrierStatus.Title')}</div>
                 </Col>
                 <Col>
                   <Radio.Group
-                    onChange={(event) => onChangeData({ key: 'Gender', value: event.target.value })}
-                    value={data.Gender}
+                    onChange={(event) => onChangeData({ key: 'CarrierStatus', value: event.target.value })}
+                    value={data.CarrierStatus}
                     options={[
-                      { label: 'Male', value: 'Male' },
-                      { label: 'Female', value: 'Female' },
-                      { label: 'Unknown', value: 'Unknown' },
+                      { label: t('settingNode.ClinicalOptions.CarrierStatus.NotAffected'), value: 'NotAffected' },
+                      { label: t('settingNode.ClinicalOptions.CarrierStatus.Affected'), value: 'Affected' },
+                      { label: t('settingNode.ClinicalOptions.CarrierStatus.Carrier'), value: 'Carrier' },
+                      { label: t('settingNode.ClinicalOptions.CarrierStatus.PreSymptomatic'), value: 'PreSymptomatic' },
                     ]}
+                  />
+                </Col>
+                <Col>
+                  <Checkbox
+                    checked={data.DocumentedEvaluation}
+                    onChange={(event) => onChangeData({ key: 'DocumentedEvaluation', value: event.target.checked })}>
+                    {t('settingNode.ClinicalOptions.DocumentedEvaluation')}
+                  </Checkbox>
+                </Col>
+              </Row>
+              <Row gutter={[0, 8]}>
+                <Col span={24}>
+                  <b>{t('settingNode.ClinicalOptions.KnownDisordersOfThisIndividual')}</b>
+                </Col>
+                <Col span={24}>
+                  <Input
+                    value={data.KnownDisordersOfThisIndividual}
+                    onChange={(event) =>
+                      onChangeData({ key: 'KnownDisordersOfThisIndividual', value: event.target.value })
+                    }
                   />
                 </Col>
               </Row>
               <Row gutter={[0, 8]}>
                 <Col span={24}>
-                  <div>Carrier status</div>
+                  <b>{t('settingNode.ClinicalOptions.ClinicalSymptomsObservedPhenotypes')}</b>
                 </Col>
-                <Col>
-                  <Radio.Group
-                    onChange={(event) => onChangeData({ key: 'Gender', value: event.target.value })}
-                    value={data.Gender}
-                    options={[
-                      { label: 'Not affected', value: 'Not affected' },
-                      { label: 'Affected', value: 'Affected' },
-                      { label: 'Carrier', value: 'Carrier' },
-                      { label: 'Pre-symptomatic', value: 'Pre-symptomatic' },
-                    ]}
+                <Col span={24}>
+                  <Input
+                    value={data.ClinicalSymptomsObservedPhenotypes}
+                    onChange={(event) =>
+                      onChangeData({ key: 'ClinicalSymptomsObservedPhenotypes', value: event.target.value })
+                    }
                   />
                 </Col>
-                <Col>
-                  <Checkbox>Documented evaluation</Checkbox>
+              </Row>
+              <Row gutter={[0, 8]}>
+                <Col span={24}>
+                  <b>{t('settingNode.ClinicalOptions.GenotypeInformationCandidateGenes')}</b>
+                </Col>
+                <Col span={24}>
+                  <Input
+                    value={data.GenotypeInformationCandidateGenes}
+                    onChange={(event) =>
+                      onChangeData({ key: 'GenotypeInformationCandidateGenes', value: event.target.value })
+                    }
+                  />
                 </Col>
               </Row>
               <Row gutter={[0, 8]}>
                 <Col span={24}>
-                  <b>Known disorders of this individual</b>
+                  <b>{t('settingNode.ClinicalOptions.Comments')}</b>
                 </Col>
                 <Col span={24}>
-                  <Input />
-                </Col>
-              </Row>
-              <Row gutter={[0, 8]}>
-                <Col span={24}>
-                  <b>Clinical symptoms: observed phenotypes</b>
-                </Col>
-                <Col span={24}>
-                  <Input />
-                </Col>
-              </Row>
-              <Row gutter={[0, 8]}>
-                <Col span={24}>
-                  <b>Genotype information: candidate genes</b>
-                </Col>
-                <Col span={24}>
-                  <Input />
-                </Col>
-              </Row>
-              <Row gutter={[0, 8]}>
-                <Col span={24}>
-                  <b>Comments</b>
-                </Col>
-                <Col span={24}>
-                  <Input.TextArea />
+                  <Input.TextArea
+                    value={data.Comments}
+                    onChange={(event) => onChangeData({ key: 'Comments', value: event.target.value })}
+                  />
                 </Col>
               </Row>
             </>

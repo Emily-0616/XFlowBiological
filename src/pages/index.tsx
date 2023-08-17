@@ -1,5 +1,5 @@
 import { SaveOutlined } from '@ant-design/icons';
-import { Cell, EventArgs, Graph, Node } from '@antv/x6';
+import { EventArgs, Graph, Node } from '@antv/x6';
 import { Export } from '@antv/x6-plugin-export';
 import { History } from '@antv/x6-plugin-history';
 import { Keyboard } from '@antv/x6-plugin-keyboard';
@@ -8,14 +8,16 @@ import { Snapline } from '@antv/x6-plugin-snapline';
 import { register } from '@antv/x6-react-shape';
 import { css } from '@emotion/react';
 import { Button, Dropdown, Space, Tooltip, Upload } from 'antd';
+import { Dayjs } from 'dayjs';
 import fs from 'file-saver';
+import i18next from 'i18next';
 import { useCallback, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import CustomDeleteLabel from '../components/CustomDeleteLabel';
 import MainNode from '../components/MainNode';
 import SettingNode from '../components/SettingNode';
 import { ports } from '../data/default';
-import { isMobile } from '../utils/isMobile';
+import { updateSearchParams } from '../utils/updateSearchParams';
 
 /** @description 新增兄弟节点时判断输出什么属性 */
 enum AddNodeGenderMap {
@@ -31,6 +33,26 @@ interface NodeRecord {
   nodeList: string[];
   edgeList: string[];
 }
+
+type HeredityTypes = 'None' | 'Childless' | 'Infertile';
+type IndividualTypes = 'Alive' | 'Deceased' | 'Unborn' | 'Stillborn' | 'Miscarriage' | 'Aborted';
+type CarrierStatusTypes = 'NotAffected' | 'Affected' | 'Carrier' | 'PreSymptomatic';
+type DataTypes = {
+  Gender: 'Male' | 'Female' | 'Unknown';
+  Name?: string;
+  LastNameAtBirth?: string;
+  ExternalID?: string;
+  Ethnicities?: string;
+  DateOfBirth: Dayjs | null;
+  DateOfDeath: Dayjs | null;
+  IndividualIs?: IndividualTypes;
+  heredityValue?: HeredityTypes;
+  heredityText?: string;
+  AdoptedIn: boolean;
+  GestationAge?: string;
+  CarrierStatus?: CarrierStatusTypes;
+  DocumentedEvaluation: boolean;
+};
 
 // 这个调用需要在组件外进行。
 register({
@@ -49,6 +71,7 @@ register({
       event: 'node:delete',
     },
   },
+  effect: ['data'],
 });
 
 // 点击连接桩生成的 MainNode 尺寸
@@ -57,16 +80,29 @@ const CREATE_NODE_SIZE = {
   height: 60,
 };
 
+const SETTING_INIT_DATA: DataTypes = {
+  Gender: 'Unknown',
+  DateOfBirth: null,
+  DateOfDeath: null,
+  AdoptedIn: false,
+  GestationAge: '-',
+  IndividualIs: 'Alive',
+  Name: '',
+  CarrierStatus: 'NotAffected',
+  DocumentedEvaluation: false,
+};
+
 const Index = () => {
   const graphRef = useRef<Graph | undefined>(undefined);
-  const settingNodeRef = useRef<Cell | undefined>(undefined);
   const containerRef = useRef<HTMLDivElement | undefined>(undefined);
-  const selectNodeRef = useRef<Cell | undefined>(undefined);
+  const settingNodeRef = useRef<Node | undefined>(undefined);
+  const selectNodeRef = useRef<Node | undefined>(undefined);
   const nodeRecordRef = useRef<NodeRecord[]>([]);
+  const searchParams = new URLSearchParams();
 
   const clearNode = () => {
-    selectNodeRef.current = undefined;
     settingNodeRef.current = undefined;
+    selectNodeRef.current = undefined;
   };
 
   const deleteNode = (id: string) => {
@@ -103,9 +139,10 @@ const Index = () => {
               radius: 8,
             },
           },
-          anchor: 'center',
+          anchor: 'midSide',
           connectionPoint: 'anchor',
           allowBlank: false,
+          allowNode: false,
           snap: {
             radius: 20,
           },
@@ -125,8 +162,11 @@ const Index = () => {
           //     zIndex: 0,
           //   });
           // },
-          validateConnection({ targetMagnet }) {
-            return !!targetMagnet;
+          validateConnection({ sourceCell, targetCell }) {
+            if (sourceCell?.id === targetCell?.id) {
+              return false;
+            }
+            return true;
           },
         },
         highlighting: {
@@ -171,6 +211,9 @@ const Index = () => {
         },
         interacting: () => ({
           edgeLabelMovable: false,
+          nodeMovable: (event) => {
+            return event.cell.shape === 'SettingNode' ? false : true;
+          },
         }),
         onEdgeLabelRendered: (args) => {
           // 通过 foreignObject 插入 react 节点 生成自定义 label
@@ -228,19 +271,17 @@ const Index = () => {
           width: 60,
           height: 60,
         },
-        data: {
-          Gender: 'Unknown',
-        },
         ports: { ...ports },
+        data: SETTING_INIT_DATA,
       });
-
+      // 点击连接桩生成节点，动态修改gender 默认值
       const createNode = (x: number, y: number, gender: string): Node<Node.Properties> => {
         return graphRef.current!.addNode({
           shape: 'MainNode',
           x,
           y,
           size: CREATE_NODE_SIZE,
-          data: { Gender: gender },
+          data: { ...SETTING_INIT_DATA, Gender: gender },
           ports: { ...ports },
         });
       };
@@ -396,31 +437,31 @@ const Index = () => {
           }
         }
       };
-      graphRef.current.on('node:mouseenter', () => {
-        showPorts(graphRef.current?.getNodes(), true);
+      graphRef.current.on('node:mouseenter', (event) => {
+        if (event.cell.shape === 'MainNode') {
+          showPorts(graphRef.current?.getNodes(), true);
+        } else {
+          showPorts(graphRef.current?.getNodes(), false);
+        }
       });
-      graphRef.current.on('node:mouseleave', () => {
+      graphRef.current.on('node:mouseleave', (event) => {
         showPorts(graphRef.current?.getNodes(), false);
       });
-
-      graphRef.current.on('node:click', (event) => {
-        if (event.e.target.nodeName === 'circle') return;
-        // 如果当前不存在settingNode 的情况下跟据当前点击的node 坐标生成id
-        if (!settingNodeRef.current) {
+      graphRef.current.on('node:selected', (event) => {
+        selectNodeRef.current = event.node;
+        // 判断是否存在seetingNode 存在则修改定位跟data。否则则生成节点
+        if (settingNodeRef.current) {
+          settingNodeRef.current.setPosition({ x: event.node.position().x + 80, y: event.node.position().y });
+          settingNodeRef.current.setData(event.cell.data);
+        } else {
           settingNodeRef.current = graphRef.current?.addNode({
-            x: event.x + 60,
-            y: event.y - 20,
+            x: event.node.getPosition().x + 80,
+            y: event.node.position().y,
             shape: 'SettingNode',
             data: {
-              enableMove: false,
+              ...event.cell.data,
             },
           });
-          // 生成了settingNode 以后记录选中的node
-          selectNodeRef.current = event.cell;
-        }
-        // 如果settingNode 存在并且被点击的情况下，框选父节点
-        if (selectNodeRef.current && event.cell.shape === 'SettingNode') {
-          graphRef.current?.select(selectNodeRef.current.id);
         }
       });
       graphRef.current.on('blank:click', () => {
@@ -435,10 +476,12 @@ const Index = () => {
         node.remove();
         clearNode();
       });
+      // 两个节点都需要动态赋值
       graphRef.current.on('settingNode:change', (_: Node<Node.Properties>, data) => {
-        selectNodeRef.current?.setData({
-          ...data,
-        });
+        console.log(data);
+
+        settingNodeRef.current?.setData(data);
+        selectNodeRef.current?.setData(data);
       });
       graphRef.current.on('node:port:click', (node: EventArgs['node:port:click']) => {
         createParentNode(node);
@@ -494,10 +537,18 @@ const Index = () => {
                 {
                   label: '简中',
                   key: 'zh-cn',
+                  onClick: () => {
+                    i18next.changeLanguage('zh');
+                    updateSearchParams({ local: 'zh' });
+                  },
                 },
                 {
                   label: '英文',
                   key: 'en',
+                  onClick: () => {
+                    i18next.changeLanguage('en');
+                    updateSearchParams({ local: 'en' });
+                  },
                 },
               ],
             }}>
