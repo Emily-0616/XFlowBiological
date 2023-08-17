@@ -9,6 +9,7 @@ const Redirect = ({ children }: any) => {
     i18next.changeLanguage(local);
     return <>{children}</>;
   }
+  return <></>;
 };
 
 export default Redirect;
