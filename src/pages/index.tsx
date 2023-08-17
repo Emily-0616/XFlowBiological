@@ -223,12 +223,13 @@ const Index = () => {
             content.style.display = 'flex';
             content.style.alignItems = 'center';
             content.style.justifyContent = 'center';
-            content.style.width = '80px';
-            content.style.height = '40px';
-            content.style.padding = '10px';
+            content.style.width = '20px';
+            content.style.height = '20px';
             content.style.outline = 'none';
+            content.style.padding = '2px';
+            content.style.background = '#f2f7fa';
             content.style.transform =
-              label.data === 'CustomDeleteLabel' ? 'translate(-32px,-22px)' : 'translate(-40px, -50px)';
+              label.data === 'CustomDeleteLabel' ? 'translate(0px,-10px)' : 'translate(-10px, -40px)';
             ReactDOM.createRoot(content).render(<CustomDeleteLabel id={edge.id} onDelete={deleteNode} />);
           }
         },
@@ -484,6 +485,23 @@ const Index = () => {
       });
       graphRef.current.on('node:port:click', (node: EventArgs['node:port:click']) => {
         createParentNode(node);
+      });
+      graphRef.current.on('edge:connected', ({ isNew, edge }) => {
+        if (isNew) {
+          // 对新创建的边进行插入数据库等持久化操作
+          console.log(isNew, edge);
+          edge?.appendLabel({
+            markup: [{ tagName: 'foreignObject', selector: 'foContent' }],
+            data: 'CustomDeleteLabel_bottom',
+            position: 40,
+          });
+          // 插入到存储列表中 用于删除查找
+          pushNodeRecord({
+            id: edge.id,
+            nodeList: [],
+            edgeList: [edge.id],
+          });
+        }
       });
     }
   }, []);

@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { Button } from 'antd';
+import { CloseCircleOutlined } from '@ant-design/icons';
 
 interface Props {
   id: string;
@@ -8,13 +8,18 @@ interface Props {
 
 const CustomDeleteLabel: FC<Props> = (props) => {
   return (
-    <Button
-      size="small"
-      onClick={() => {
-        typeof props.onDelete === 'function' && props.onDelete(props.id);
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
       }}>
-      remove
-    </Button>
+      <CloseCircleOutlined
+        onClick={() => {
+          typeof props.onDelete === 'function' && props.onDelete(props.id);
+        }}
+      />
+    </div>
   );
 };
 
