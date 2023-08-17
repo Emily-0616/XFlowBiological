@@ -8,6 +8,7 @@ import { Snapline } from '@antv/x6-plugin-snapline';
 import { register } from '@antv/x6-react-shape';
 import { css } from '@emotion/react';
 import { Button, Dropdown, Space, Tooltip, Upload } from 'antd';
+import { Dayjs } from 'dayjs';
 import fs from 'file-saver';
 import { useCallback, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
@@ -31,6 +32,26 @@ interface NodeRecord {
   edgeList: string[];
 }
 
+type HeredityTypes = 'None' | 'Childless' | 'Infertile';
+type IndividualTypes = 'Alive' | 'Deceased' | 'Unborn' | 'Stillborn' | 'Miscarriage' | 'Aborted';
+type CarrierStatusTypes = 'NotAffected' | 'Affected' | 'Carrier' | 'PreSymptomatic';
+type DataTypes = {
+  Gender: 'Male' | 'Female' | 'Unknown';
+  Name?: string;
+  LastNameAtBirth?: string;
+  ExternalID?: string;
+  Ethnicities?: string;
+  DateOfBirth: Dayjs | null;
+  DateOfDeath: Dayjs | null;
+  IndividualIs?: IndividualTypes;
+  heredityValue?: HeredityTypes;
+  heredityText?: string;
+  AdoptedIn: boolean;
+  GestationAge?: string;
+  CarrierStatus?: CarrierStatusTypes;
+  DocumentedEvaluation: boolean;
+};
+
 // 这个调用需要在组件外进行。
 register({
   shape: 'MainNode',
@@ -48,7 +69,7 @@ register({
       event: 'node:delete',
     },
   },
-  effect:['data']
+  effect: ['data'],
 });
 
 // 点击连接桩生成的 MainNode 尺寸
@@ -57,15 +78,17 @@ const CREATE_NODE_SIZE = {
   height: 60,
 };
 
-  const SETTING_INIT_DATA = {
-    Gender: 'Unknown',
-    DateOfBirth: null,
-    DateOfDeath: null,
-    AdoptedIn: false,
-    GestationAge: '-',
-    IndividualIs: 'Alive',
-    Name:''
-  }
+const SETTING_INIT_DATA: DataTypes = {
+  Gender: 'Unknown',
+  DateOfBirth: null,
+  DateOfDeath: null,
+  AdoptedIn: false,
+  GestationAge: '-',
+  IndividualIs: 'Alive',
+  Name: '',
+  CarrierStatus: 'NotAffected',
+  DocumentedEvaluation: false,
+};
 
 const Index = () => {
   const graphRef = useRef<Graph | undefined>(undefined);
@@ -182,8 +205,8 @@ const Index = () => {
         interacting: () => ({
           edgeLabelMovable: false,
           nodeMovable: (event) => {
-            return event.cell.shape === 'SettingNode'?false:true
-          }
+            return event.cell.shape === 'SettingNode' ? false : true;
+          },
         }),
         onEdgeLabelRendered: (args) => {
           // 通过 foreignObject 插入 react 节点 生成自定义 label
@@ -242,7 +265,7 @@ const Index = () => {
           height: 60,
         },
         ports: { ...ports },
-        data:SETTING_INIT_DATA
+        data: SETTING_INIT_DATA,
       });
       // 点击连接桩生成节点，动态修改gender 默认值
       const createNode = (x: number, y: number, gender: string): Node<Node.Properties> => {
@@ -251,7 +274,7 @@ const Index = () => {
           x,
           y,
           size: CREATE_NODE_SIZE,
-          data: { ...SETTING_INIT_DATA , Gender: gender },
+          data: { ...SETTING_INIT_DATA, Gender: gender },
           ports: { ...ports },
         });
       };
@@ -415,25 +438,25 @@ const Index = () => {
         }
       });
       graphRef.current.on('node:mouseleave', (event) => {
-          showPorts(graphRef.current?.getNodes(), false);
+        showPorts(graphRef.current?.getNodes(), false);
       });
       graphRef.current.on('node:selected', (event) => {
         selectNodeRef.current = event.node;
         // 判断是否存在seetingNode 存在则修改定位跟data。否则则生成节点
         if (settingNodeRef.current) {
-          settingNodeRef.current.setPosition({ x: event.node.position().x + 80, y: event.node.position().y })
-          settingNodeRef.current.setData(event.cell.data)
+          settingNodeRef.current.setPosition({ x: event.node.position().x + 80, y: event.node.position().y });
+          settingNodeRef.current.setData(event.cell.data);
         } else {
           settingNodeRef.current = graphRef.current?.addNode({
-          x: event.node.getPosition().x + 80,
-          y: event.node.position().y ,
-          shape: 'SettingNode',
-          data: {
-            ...event.cell.data
+            x: event.node.getPosition().x + 80,
+            y: event.node.position().y,
+            shape: 'SettingNode',
+            data: {
+              ...event.cell.data,
             },
           });
         }
-      })
+      });
       graphRef.current.on('blank:click', () => {
         graphRef.current?.cleanSelection();
         if (settingNodeRef.current) {
@@ -448,7 +471,9 @@ const Index = () => {
       });
       // 两个节点都需要动态赋值
       graphRef.current.on('settingNode:change', (_: Node<Node.Properties>, data) => {
-        settingNodeRef.current?.setData(data)
+        console.log(data);
+
+        settingNodeRef.current?.setData(data);
         selectNodeRef.current?.setData(data);
       });
       graphRef.current.on('node:port:click', (node: EventArgs['node:port:click']) => {

@@ -34,6 +34,20 @@
         "Title": "孕龄",
         "week": "周"
       }
+    },
+    "ClinicalOptions": {
+      "CarrierStatus": {
+        "Title": "遗传病",
+        "NotAffected": "未受影响",
+        "Affected":"受影响",
+        "Carrier": "携带者",
+        "PreSymptomatic": "无症状"
+      },
+      "DocumentedEvaluation":"记录评估",
+      "KnownDisordersOfThisIndividual":"已知疾病",
+      "ClinicalSymptomsObservedPhenotypes":"临床症状：观察到的表型",
+      "GenotypeInformationCandidateGenes":"基因型信息：候选基因",
+      "Comments":"意见"
     }
   }
 }
