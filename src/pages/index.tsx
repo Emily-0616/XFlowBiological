@@ -136,9 +136,10 @@ const Index = () => {
               radius: 8,
             },
           },
-          anchor: 'center',
+          anchor: 'midSide',
           connectionPoint: 'anchor',
           allowBlank: false,
+          allowNode: false,
           snap: {
             radius: 20,
           },
@@ -158,8 +159,11 @@ const Index = () => {
           //     zIndex: 0,
           //   });
           // },
-          validateConnection({ targetMagnet }) {
-            return !!targetMagnet;
+          validateConnection({ sourceCell, targetCell }) {
+            if (sourceCell?.id === targetCell?.id) {
+              return false;
+            }
+            return true;
           },
         },
         highlighting: {
