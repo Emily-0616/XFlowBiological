@@ -32,8 +32,7 @@
         "Infertile": "Infertile"
       },
       "GestationAge": {
-        "Title": "Gestation age",
-        "week": "week"
+        "Title": "Gestation age"
       }
     },
     "ClinicalOptions": {
@@ -49,6 +48,13 @@
       "ClinicalSymptomsObservedPhenotypes":"Clinical symptoms: observed phenotypes",
       "GenotypeInformationCandidateGenes":"Genotype information: candidate genes",
       "Comments":"Comments"
+    }
+  },
+  "Common":{
+    "date":{
+      "days":"days",
+      "week": "week",
+      "months":"months"
     }
   }
 }

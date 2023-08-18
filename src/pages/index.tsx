@@ -37,7 +37,7 @@ interface NodeRecord {
 type HeredityTypes = 'None' | 'Childless' | 'Infertile';
 type IndividualTypes = 'Alive' | 'Deceased' | 'Unborn' | 'Stillborn' | 'Miscarriage' | 'Aborted';
 type CarrierStatusTypes = 'NotAffected' | 'Affected' | 'Carrier' | 'PreSymptomatic';
-type DataTypes = {
+export type DataTypes = {
   Gender: 'Male' | 'Female' | 'Unknown';
   Name?: string;
   LastNameAtBirth?: string;
@@ -477,8 +477,6 @@ const Index = () => {
       });
       // 两个节点都需要动态赋值
       graphRef.current.on('settingNode:change', (_: Node<Node.Properties>, data) => {
-        console.log(data);
-
         settingNodeRef.current?.setData(data);
         selectNodeRef.current?.setData(data);
       });
