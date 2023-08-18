@@ -7,7 +7,8 @@ import { Selection } from '@antv/x6-plugin-selection';
 import { Snapline } from '@antv/x6-plugin-snapline';
 import { register } from '@antv/x6-react-shape';
 import { css } from '@emotion/react';
-import { Button, Dropdown, Space, Tooltip, Upload } from 'antd';
+import { Button, Dropdown, Space, Tooltip, Upload, Modal } from 'antd';
+import { ExclamationCircleFilled } from '@ant-design/icons';
 import { Dayjs } from 'dayjs';
 import fs from 'file-saver';
 import i18next from 'i18next';
@@ -107,16 +108,22 @@ const Index = () => {
   const deleteNode = (id: string) => {
     const findDeleteItem = nodeRecordRef.current.find((item) => item.id === id);
 
-    // 删除记录上的节点和线
-    findDeleteItem?.nodeList.forEach((node) => {
-      graphRef.current?.removeNode(node);
-    });
-    findDeleteItem?.edgeList.forEach((edge) => {
-      graphRef.current?.removeEdge(edge);
-    });
+    Modal.confirm({
+      title: `确认删除该连接线${!!findDeleteItem?.nodeList?.length ? '与对应的节点' : ''}吗？`,
+      icon: <ExclamationCircleFilled />,
+      onOk() {
+        // 删除记录上的节点和线
+        findDeleteItem?.nodeList.forEach((node) => {
+          graphRef.current?.removeNode(node);
+        });
+        findDeleteItem?.edgeList.forEach((edge) => {
+          graphRef.current?.removeEdge(edge);
+        });
 
-    const copied = nodeRecordRef.current.filter((item) => item.id !== id);
-    nodeRecordRef.current = [...copied];
+        const copied = nodeRecordRef.current.filter((item) => item.id !== id);
+        nodeRecordRef.current = [...copied];
+      },
+    });
   };
 
   const pushNodeRecord = (addItem: NodeRecord) => {
