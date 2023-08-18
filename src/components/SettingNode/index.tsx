@@ -2,10 +2,9 @@ import { CloseCircleOutlined } from '@ant-design/icons';
 import { Graph, Node } from '@antv/x6';
 import { css } from '@emotion/react';
 import { Checkbox, Col, DatePicker, Input, Radio, Row, Select, Space, Tabs } from 'antd';
-import { Dayjs } from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-
 const HeaderCss = css`
   text-align: right;
 `;
@@ -82,7 +81,7 @@ const SettingNode = ({ node, graph }: { node: Node<Node.Properties>; graph: Grap
         });
       } else {
         data.push({
-          label: `${index} ${t('settingNode.PersonalOptions.GestationAge.week')}`,
+          label: `${index} ${t('Common.date.week')}`,
           value: index,
         });
       }
@@ -90,20 +89,28 @@ const SettingNode = ({ node, graph }: { node: Node<Node.Properties>; graph: Grap
     return data;
   };
 
-  const onChangeData = ({ key, value }: { key: string; value: string | Dayjs | null | boolean }) => {
+  const onChangeData = ({ key, value }: { key: string; value: string | dayjs.Dayjs | null | boolean }) => {
     const newData = { ...data, [key]: value };
     graph.trigger('settingNode:change', node, newData);
   };
 
+  const DateOfBirthDisabledDate = (currentDate: Dayjs) => {
+    if (data.DateOfDeath) {
+      return currentDate.isAfter(dayjs(data.DateOfDeath), 'days');
+    } else {
+      return false;
+    }
+  };
+  const DateOfDeathDisabledDate = (currentDate: Dayjs) => {
+    if (data.DateOfBirth) {
+      return currentDate.isBefore(dayjs(data.DateOfBirth), 'days');
+    } else {
+      return false;
+    }
+  };
+
   return (
     <div css={MainCss}>
-      <Tabs
-        activeKey={tabActiveKey}
-        type="card"
-        size="small"
-        onChange={(activeKey) => setTabActiveKey(activeKey as 'Personal' | 'Clinical')}
-        items={tabOptiosn}
-      />
       <div css={HeaderCss} id="close">
         <CloseCircleOutlined
           onClick={() => {
@@ -114,6 +121,14 @@ const SettingNode = ({ node, graph }: { node: Node<Node.Properties>; graph: Grap
           `}
         />
       </div>
+      <Tabs
+        activeKey={tabActiveKey}
+        type="card"
+        size="small"
+        onChange={(activeKey) => setTabActiveKey(activeKey as 'Personal' | 'Clinical')}
+        items={tabOptiosn}
+      />
+
       <div>
         <Space
           direction="vertical"
@@ -160,22 +175,30 @@ const SettingNode = ({ node, graph }: { node: Node<Node.Properties>; graph: Grap
                   </Col>
                   <Col span={12}>
                     <DatePicker
+                      disabledDate={DateOfBirthDisabledDate}
                       placeholder={t('settingNode.PersonalOptions.DatePlaceholder')}
                       value={data.DateOfBirth}
                       css={css`
                         width: 100%;
                       `}
-                      onChange={(event) => onChangeData({ key: 'Ethnicities', value: event })}
+                      onChange={(event) => onChangeData({ key: 'DateOfBirth', value: event })}
                     />
                   </Col>
                   <Col span={12}>
                     <DatePicker
+                      disabledDate={DateOfDeathDisabledDate}
                       placeholder={t('settingNode.PersonalOptions.DatePlaceholder')}
                       value={data.DateOfDeath}
                       css={css`
                         width: 100%;
                       `}
-                      onChange={(event) => onChangeData({ key: 'DateOfDeath', value: event })}
+                      onChange={(event) => {
+                        graph.trigger('settingNode:change', node, {
+                          ...data,
+                          DateOfDeath: event,
+                          IndividualIs: 'Deceased',
+                        });
+                      }}
                     />
                   </Col>
                 </Row>

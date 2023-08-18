@@ -6,7 +6,5 @@ export const updateSearchParams = (params: { [key: string]: string; }) => {
     }
   }
   const newUrl = `${window.location.pathname}?${searchParams.toString()}`;
-  console.log(newUrl);
-
   window.history.replaceState({}, '', newUrl);
 };

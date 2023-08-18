@@ -14,7 +14,8 @@
       "Name": "姓名",
       "DateOfBirth": "出生日期",
       "DateOfDeath": "死亡日期",
-      "DatePlaceholder":"请选择日期",
+      "DatePlaceholder": "请选择日期",
+      "days": "days",
       "IndividualIs": {
         "Title": "个体",
         "Alive": "活着",
@@ -32,23 +33,29 @@
         "Infertile": "不孕"
       },
       "GestationAge": {
-        "Title": "孕龄",
-        "week": "周"
+        "Title": "孕龄"
       }
     },
     "ClinicalOptions": {
       "CarrierStatus": {
         "Title": "遗传病",
         "NotAffected": "未受影响",
-        "Affected":"受影响",
+        "Affected": "受影响",
         "Carrier": "携带者",
         "PreSymptomatic": "无症状"
       },
-      "DocumentedEvaluation":"记录评估",
-      "KnownDisordersOfThisIndividual":"已知疾病",
-      "ClinicalSymptomsObservedPhenotypes":"临床症状：观察到的表型",
-      "GenotypeInformationCandidateGenes":"基因型信息：候选基因",
-      "Comments":"意见"
+      "DocumentedEvaluation": "记录评估",
+      "KnownDisordersOfThisIndividual": "已知疾病",
+      "ClinicalSymptomsObservedPhenotypes": "临床症状：观察到的表型",
+      "GenotypeInformationCandidateGenes": "基因型信息：候选基因",
+      "Comments": "意见"
+    }
+  },
+  "Common": {
+    "date": {
+      "days": "天",
+      "week": "周",
+      "months": "月"
     }
   }
 }
