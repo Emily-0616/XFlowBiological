@@ -6,19 +6,9 @@ import { useTranslation } from 'react-i18next';
 import { DataTypes } from '../../pages';
 import { isExceedingMonth, isExceedingYear, isFuture, isWithinMonth } from '../../utils/dateDiff';
 
-const ShapeRender = ({ Gender, Proband }: { Gender: string; Proband: boolean }) => {
+const ShapeRender = ({ Gender, Proband, IndividualIs, CarrierStatus }: DataTypes) => {
   return (
     <>
-      {Gender === 'Female' && (
-        <div
-          css={css`
-            width: 60px;
-            height: 60px;
-            border: ${Proband ? '4px' : '2px'} solid #5c5c66;
-            /* border-radius: 8px; */
-            border-radius: 50%;
-          `}></div>
-      )}
       {Gender === 'Male' && (
         <div
           css={css`
@@ -29,6 +19,17 @@ const ShapeRender = ({ Gender, Proband }: { Gender: string; Proband: boolean }) 
             border-radius: 8px;
           `}></div>
       )}
+      {Gender === 'Female' && (
+        <div
+          css={css`
+            width: 60px;
+            height: 60px;
+            border: ${Proband ? '4px' : '2px'} solid #5c5c66;
+            /* border-radius: 8px; */
+            border-radius: 50%;
+          `}></div>
+      )}
+
       {Gender === 'Unknown' && (
         <div
           css={css`
@@ -49,8 +50,8 @@ const ShapeRender = ({ Gender, Proband }: { Gender: string; Proband: boolean }) 
           viewBox="0 0 1024 1024"
           css={css`
             position: absolute;
-            left: -15px;
-            bottom: -10px;
+            left: -25px;
+            bottom: -20px;
           `}>
           <path
             d="M301.8 800.5c-14 14-37.3 13.5-51.9-1.1-13.6-13.6-13.9-35.9 0-49.5l402.1-402.1c13.6-13.6 35.9-13.9 49.5 0 14 14 13.5 37.3-1.1 51.9L301.8 800.5z"
@@ -65,6 +66,44 @@ const ShapeRender = ({ Gender, Proband }: { Gender: string; Proband: boolean }) 
             fill="#000"
           />
         </svg>
+      )}
+      {(IndividualIs === 'Deceased' || IndividualIs === 'Aborted' || IndividualIs === 'Stillborn') && (
+        <div
+          css={css`
+            width: 2px;
+            height: 100px;
+            background-color: #000;
+            position: absolute;
+            transform: rotate(45deg);
+            top: -32%;
+            left: 40%;
+          `}></div>
+      )}
+
+      {CarrierStatus === 'Carrier' && (
+        <div
+          css={css`
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 10px;
+            height: 10px;
+            background-color: #000;
+            border-radius: 50%;
+          `}></div>
+      )}
+      {CarrierStatus === 'PreSymptomatic' && (
+        <div
+          css={css`
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 4px;
+            height: 100%;
+            background-color: #000;
+          `}></div>
       )}
     </>
   );
@@ -121,23 +160,105 @@ const DateRender = ({ DateOfBirth, DateOfDeath }: { DateOfBirth: Dayjs | null; D
   }
   return <></>;
 };
+const AdoptedInRender = ({ value }: { value: boolean }) => {
+  if (value) {
+    return (
+      <>
+        <div
+          css={css`
+            font-size: xxx-large;
+            font-weight: 100;
+            position: absolute;
+            left: -20%;
+            top: 0;
+          `}>
+          [
+        </div>
+        <div
+          css={css`
+            font-size: xxx-large;
+            font-weight: 100;
+            position: absolute;
+            right: -20%;
+            top: 0;
+          `}>
+          ]
+        </div>
+      </>
+    );
+  } else {
+    return <></>;
+  }
+};
+
 const MainNode = ({ node }: { node: Node<Node.Properties>; graph: Graph }) => {
   const data: DataTypes = node.data;
   const { t } = useTranslation();
+  console.log(data);
   return (
     <>
-      <ShapeRender Gender={data.Gender} Proband={data.Proband} />
+      <ShapeRender {...data} />
+      <AdoptedInRender value={data.AdoptedIn} />
+      {data.DocumentedEvaluation && (
+        <b
+          css={css`
+            height: 20px;
+            position: absolute;
+            right: -15px;
+            bottom: -15px;
+            font-size: 30px;
+          `}>
+          *
+        </b>
+      )}
+      {(data.heredityValue === 'Childless' || data.heredityValue === 'Infertile') && (
+        <div
+          css={css`
+            display: flex;
+            flex-direction: column;
+          `}>
+          <div
+            css={css`
+              width: 2px;
+              height: 14px;
+              background-color: #000;
+              margin: 0 auto;
+            `}
+          />
+          <div
+            css={css`
+              width: 26px;
+              height: 2px;
+              background-color: #000;
+              margin: 0 auto;
+            `}
+          />
+          {data.heredityValue === 'Infertile' && (
+            <div
+              css={css`
+                width: 26px;
+                height: 2px;
+                background-color: #000;
+                margin: 2px auto 0 auto;
+              `}
+            />
+          )}
+        </div>
+      )}
       <Space
         direction="vertical"
         size="small"
         css={css`
           text-align: center;
           display: flex;
+          margin-top: 6px;
         `}>
+        {data.heredityText && <div>({data.heredityText})</div>}
         {data.Name}
         <DateRender DateOfBirth={data.DateOfBirth} DateOfDeath={data.DateOfDeath} />
         {data.IndividualIs === 'Stillborn' && 'SB'}
         {data.GestationAge !== '-' && ` ${data.GestationAge} ${t('Common.date.week')}`}
+        {data.Comments}
       </Space>
     </>
   );

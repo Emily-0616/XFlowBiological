@@ -52,6 +52,8 @@ export type DataTypes = {
   GestationAge?: string;
   CarrierStatus?: CarrierStatusTypes;
   DocumentedEvaluation: boolean;
+  Proband?: boolean;
+  Comments?: string;
 };
 
 // 这个调用需要在组件外进行。
@@ -131,6 +133,17 @@ const Index = () => {
     nodeRecordRef.current = [...copied];
   };
 
+  // 点击连接桩生成节点，动态修改gender 默认值
+  const createNode = (x: number, y: number, gender: string, graph: Graph): Node<Node.Properties> => {
+    return graph.addNode({
+      shape: 'MainNode',
+      x,
+      y,
+      size: CREATE_NODE_SIZE,
+      data: { ...SETTING_INIT_DATA, Gender: gender, heredityValue: 'None' },
+      ports: { ...ports },
+    });
+  };
   const containerRefCallback = useCallback((node: any) => {
     if (node) {
       containerRef.current = node;
@@ -268,7 +281,7 @@ const Index = () => {
             global: true,
           })
         );
-
+      // 初始化节点
       graphRef.current.addNode({
         shape: 'MainNode',
         x: node.clientWidth / 2,
@@ -278,19 +291,8 @@ const Index = () => {
           height: 60,
         },
         ports: { ...ports },
-        data: { ...SETTING_INIT_DATA, Proband: true },
+        data: { ...SETTING_INIT_DATA, Proband: true, heredityValue: 'None' },
       });
-      // 点击连接桩生成节点，动态修改gender 默认值
-      const createNode = (x: number, y: number, gender: string): Node<Node.Properties> => {
-        return graphRef.current!.addNode({
-          shape: 'MainNode',
-          x,
-          y,
-          size: CREATE_NODE_SIZE,
-          data: { ...SETTING_INIT_DATA, Gender: gender },
-          ports: { ...ports },
-        });
-      };
 
       const addEdge = (
         sourceCell: string,
@@ -320,8 +322,8 @@ const Index = () => {
         const currentPorts = child.cell.ports.items.find((item) => item.id === child.port);
         // 点击上方连接桩
         if (currentPorts?.group === 'top') {
-          const maleNode = createNode(x - 100, y - 150, 'Male');
-          const femaleNode = createNode(x + 100, y - 150, 'Female');
+          const maleNode = createNode(x - 100, y - 150, 'Male', graphRef.current!);
+          const femaleNode = createNode(x + 100, y - 150, 'Female', graphRef.current!);
           const edge2 = addEdge(
             femaleNode.id,
             femaleNode.ports.items.find((item) => item.group === 'left')?.id,
@@ -349,8 +351,13 @@ const Index = () => {
         }
         // 点击右侧连接桩
         if (currentPorts?.group === 'right') {
-          const brotherNode = createNode(x + 200, y, AddNodeGenderMap[child.node.data?.Gender as AddNodeGenderMap]);
-          const childNode = createNode(x + 100, y + 150, 'Unknown');
+          const brotherNode = createNode(
+            x + 200,
+            y,
+            AddNodeGenderMap[child.node.data?.Gender as AddNodeGenderMap],
+            graphRef.current!
+          );
+          const childNode = createNode(x + 100, y + 150, 'Unknown', graphRef.current!);
           const edge2 = addEdge(
             brotherNode.id,
             brotherNode.ports.items.find((item) => item.group === 'left')?.id,
@@ -378,8 +385,13 @@ const Index = () => {
         }
         // 点击左侧连接桩
         if (currentPorts?.group === 'left') {
-          const brotherNode = createNode(x - 200, y, AddNodeGenderMap[child.node.data?.Gender as AddNodeGenderMap]);
-          const childNode = createNode(x - 100, y + 150, 'Unknown');
+          const brotherNode = createNode(
+            x - 200,
+            y,
+            AddNodeGenderMap[child.node.data?.Gender as AddNodeGenderMap],
+            graphRef.current!
+          );
+          const childNode = createNode(x - 100, y + 150, 'Unknown', graphRef.current!);
           const edge1 = addEdge(
             child.cell.id,
             child.port,
@@ -407,7 +419,7 @@ const Index = () => {
         }
         // 点击下方连接桩
         if (currentPorts?.group === 'bottom') {
-          const childNode = createNode(x, y + 150, 'Unknown');
+          const childNode = createNode(x, y + 150, 'Unknown', graphRef.current!);
           const edge = addEdge(
             child.cell.id,
             child.port,

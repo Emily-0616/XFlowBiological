@@ -57,16 +57,16 @@ const SettingNode = ({ node, graph }: { node: Node<Node.Properties>; graph: Grap
 
   const heredityOptions = [
     {
-      label: 'None',
-      value: t('settingNode.PersonalOptions.HeredityOptions.None'),
+      label: t('settingNode.PersonalOptions.HeredityOptions.None'),
+      value: 'None',
     },
     {
-      label: 'Childless',
-      value: t('settingNode.PersonalOptions.HeredityOptions.Childless'),
+      label: t('settingNode.PersonalOptions.HeredityOptions.Childless'),
+      value: 'Childless',
     },
     {
-      label: 'Infertile',
-      value: t('settingNode.PersonalOptions.HeredityOptions.Infertile'),
+      label: t('settingNode.PersonalOptions.HeredityOptions.Infertile'),
+      value: 'Infertile',
     },
   ];
 
@@ -255,6 +255,7 @@ const SettingNode = ({ node, graph }: { node: Node<Node.Properties>; graph: Grap
                   </Col>
                   <Col span={12}>
                     <Input
+                      disabled={data.heredityValue === 'None'}
                       value={data.heredityText}
                       onChange={(event) => onChangeData({ key: 'heredityText', value: event.target.value })}
                     />
