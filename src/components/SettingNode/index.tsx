@@ -5,6 +5,7 @@ import { Checkbox, Col, DatePicker, Input, Radio, Row, Select, Space, Tabs } fro
 import dayjs, { Dayjs } from 'dayjs';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { DataTypes } from '../../pages';
 const HeaderCss = css`
   text-align: right;
 `;
@@ -57,20 +58,20 @@ const SettingNode = ({ node, graph }: { node: Node<Node.Properties>; graph: Grap
 
   const heredityOptions = [
     {
-      label: 'None',
-      value: t('settingNode.PersonalOptions.HeredityOptions.None'),
+      label: t('settingNode.PersonalOptions.HeredityOptions.None'),
+      value: 'None',
     },
     {
-      label: 'Childless',
-      value: t('settingNode.PersonalOptions.HeredityOptions.Childless'),
+      label: t('settingNode.PersonalOptions.HeredityOptions.Childless'),
+      value: 'Childless',
     },
     {
-      label: 'Infertile',
-      value: t('settingNode.PersonalOptions.HeredityOptions.Infertile'),
+      label: t('settingNode.PersonalOptions.HeredityOptions.Infertile'),
+      value: 'Infertile',
     },
   ];
 
-  const data = node.getData();
+  const data: DataTypes = node.getData();
   const gestationAgeOptions = () => {
     const data = [];
     for (let index = 0; index < 51; index++) {
@@ -255,6 +256,7 @@ const SettingNode = ({ node, graph }: { node: Node<Node.Properties>; graph: Grap
                   </Col>
                   <Col span={12}>
                     <Input
+                      disabled={data.heredityValue === 'None'}
                       value={data.heredityText}
                       onChange={(event) => onChangeData({ key: 'heredityText', value: event.target.value })}
                     />
@@ -284,7 +286,11 @@ const SettingNode = ({ node, graph }: { node: Node<Node.Properties>; graph: Grap
                       { label: t('settingNode.ClinicalOptions.CarrierStatus.NotAffected'), value: 'NotAffected' },
                       { label: t('settingNode.ClinicalOptions.CarrierStatus.Affected'), value: 'Affected' },
                       { label: t('settingNode.ClinicalOptions.CarrierStatus.Carrier'), value: 'Carrier' },
-                      { label: t('settingNode.ClinicalOptions.CarrierStatus.PreSymptomatic'), value: 'PreSymptomatic' },
+                      {
+                        label: t('settingNode.ClinicalOptions.CarrierStatus.PreSymptomatic'),
+                        value: 'PreSymptomatic',
+                        disabled: data.IndividualIs === 'Miscarriage' || data.IndividualIs === 'Aborted',
+                      },
                     ]}
                   />
                 </Col>

@@ -1,4 +1,4 @@
-import { SaveOutlined } from '@ant-design/icons';
+import { ExclamationCircleFilled, SaveOutlined } from '@ant-design/icons';
 import { EventArgs, Graph, Node } from '@antv/x6';
 import { Export } from '@antv/x6-plugin-export';
 import { History } from '@antv/x6-plugin-history';
@@ -7,8 +7,7 @@ import { Selection } from '@antv/x6-plugin-selection';
 import { Snapline } from '@antv/x6-plugin-snapline';
 import { register } from '@antv/x6-react-shape';
 import { css } from '@emotion/react';
-import { Button, Dropdown, Space, Tooltip, Upload, Modal } from 'antd';
-import { ExclamationCircleFilled } from '@ant-design/icons';
+import { Button, Dropdown, Modal, Space, Tooltip, Upload } from 'antd';
 import { Dayjs } from 'dayjs';
 import fs from 'file-saver';
 import i18next from 'i18next';
@@ -53,6 +52,11 @@ export type DataTypes = {
   GestationAge?: string;
   CarrierStatus?: CarrierStatusTypes;
   DocumentedEvaluation: boolean;
+  Proband?: boolean;
+  Comments?: string;
+  KnownDisordersOfThisIndividual?: string;
+  ClinicalSymptomsObservedPhenotypes?: string;
+  GenotypeInformationCandidateGenes?: string;
 };
 
 // 这个调用需要在组件外进行。
@@ -107,7 +111,10 @@ const Index = () => {
 
   const deleteNode = (id: string) => {
     const findDeleteItem = nodeRecordRef.current.find((item) => item.id === id);
-
+    if (settingNodeRef.current) {
+      graphRef.current?.removeNode(settingNodeRef.current.id);
+      clearNode();
+    }
     Modal.confirm({
       title: `确认删除该连接线${!!findDeleteItem?.nodeList?.length ? '与对应的节点' : ''}吗？`,
       icon: <ExclamationCircleFilled />,
@@ -132,6 +139,17 @@ const Index = () => {
     nodeRecordRef.current = [...copied];
   };
 
+  // 点击连接桩生成节点，动态修改gender 默认值
+  const createNode = (x: number, y: number, gender: string, graph: Graph): Node<Node.Properties> => {
+    return graph.addNode({
+      shape: 'MainNode',
+      x,
+      y,
+      size: CREATE_NODE_SIZE,
+      data: { ...SETTING_INIT_DATA, Gender: gender, heredityValue: 'None' },
+      ports: { ...ports },
+    });
+  };
   const containerRefCallback = useCallback((node: any) => {
     if (node) {
       containerRef.current = node;
@@ -269,7 +287,7 @@ const Index = () => {
             global: true,
           })
         );
-
+      // 初始化节点
       graphRef.current.addNode({
         shape: 'MainNode',
         x: node.clientWidth / 2,
@@ -279,19 +297,8 @@ const Index = () => {
           height: 60,
         },
         ports: { ...ports },
-        data: SETTING_INIT_DATA,
+        data: { ...SETTING_INIT_DATA, Proband: true, heredityValue: 'None' },
       });
-      // 点击连接桩生成节点，动态修改gender 默认值
-      const createNode = (x: number, y: number, gender: string): Node<Node.Properties> => {
-        return graphRef.current!.addNode({
-          shape: 'MainNode',
-          x,
-          y,
-          size: CREATE_NODE_SIZE,
-          data: { ...SETTING_INIT_DATA, Gender: gender },
-          ports: { ...ports },
-        });
-      };
 
       const addEdge = (
         sourceCell: string,
@@ -321,8 +328,8 @@ const Index = () => {
         const currentPorts = child.cell.ports.items.find((item) => item.id === child.port);
         // 点击上方连接桩
         if (currentPorts?.group === 'top') {
-          const maleNode = createNode(x - 100, y - 150, 'Male');
-          const femaleNode = createNode(x + 100, y - 150, 'Female');
+          const maleNode = createNode(x - 100, y - 150, 'Male', graphRef.current!);
+          const femaleNode = createNode(x + 100, y - 150, 'Female', graphRef.current!);
           const edge2 = addEdge(
             femaleNode.id,
             femaleNode.ports.items.find((item) => item.group === 'left')?.id,
@@ -350,8 +357,13 @@ const Index = () => {
         }
         // 点击右侧连接桩
         if (currentPorts?.group === 'right') {
-          const brotherNode = createNode(x + 200, y, AddNodeGenderMap[child.node.data?.Gender as AddNodeGenderMap]);
-          const childNode = createNode(x + 100, y + 150, 'Unknown');
+          const brotherNode = createNode(
+            x + 200,
+            y,
+            AddNodeGenderMap[child.node.data?.Gender as AddNodeGenderMap],
+            graphRef.current!
+          );
+          const childNode = createNode(x + 100, y + 150, 'Unknown', graphRef.current!);
           const edge2 = addEdge(
             brotherNode.id,
             brotherNode.ports.items.find((item) => item.group === 'left')?.id,
@@ -379,8 +391,13 @@ const Index = () => {
         }
         // 点击左侧连接桩
         if (currentPorts?.group === 'left') {
-          const brotherNode = createNode(x - 200, y, AddNodeGenderMap[child.node.data?.Gender as AddNodeGenderMap]);
-          const childNode = createNode(x - 100, y + 150, 'Unknown');
+          const brotherNode = createNode(
+            x - 200,
+            y,
+            AddNodeGenderMap[child.node.data?.Gender as AddNodeGenderMap],
+            graphRef.current!
+          );
+          const childNode = createNode(x - 100, y + 150, 'Unknown', graphRef.current!);
           const edge1 = addEdge(
             child.cell.id,
             child.port,
@@ -408,7 +425,7 @@ const Index = () => {
         }
         // 点击下方连接桩
         if (currentPorts?.group === 'bottom') {
-          const childNode = createNode(x, y + 150, 'Unknown');
+          const childNode = createNode(x, y + 150, 'Unknown', graphRef.current!);
           const edge = addEdge(
             child.cell.id,
             child.port,
