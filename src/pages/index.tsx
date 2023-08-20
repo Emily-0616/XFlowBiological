@@ -119,16 +119,35 @@ const Index = () => {
       title: `确认删除该连接线${!!findDeleteItem?.nodeList?.length ? '与对应的节点' : ''}吗？`,
       icon: <ExclamationCircleFilled />,
       onOk() {
-        // 删除记录上的节点和线
-        findDeleteItem?.nodeList.forEach((node) => {
-          graphRef.current?.removeNode(node);
-        });
-        findDeleteItem?.edgeList.forEach((edge) => {
-          graphRef.current?.removeEdge(edge);
-        });
+        try {
+          // 删除记录上的节点和线
+          findDeleteItem?.nodeList.forEach((node) => {
+            const childNodeList: string[] = [];
+            graphRef.current?.searchCell(
+              graphRef.current?.getCellById(node),
+              (cell) => {
+                cell.id && childNodeList.push(cell.id);
+              },
+              {
+                deep: true,
+                outgoing: true,
+                indirect: true,
+              }
+            );
 
-        const copied = nodeRecordRef.current.filter((item) => item.id !== id);
-        nodeRecordRef.current = [...copied];
+            childNodeList?.forEach((id) => {
+              id && graphRef.current?.removeNode(id);
+            });
+            graphRef.current?.removeNode(node);
+          });
+          findDeleteItem?.edgeList.forEach((edge) => {
+            graphRef.current?.removeEdge(edge);
+          });
+          const copied = nodeRecordRef.current.filter((item) => item.id !== id);
+          nodeRecordRef.current = [...copied];
+        } catch (err) {
+          console.error(err);
+        }
       },
     });
   };
@@ -322,6 +341,27 @@ const Index = () => {
         return edge;
       };
 
+      // 增加节点追踪的线
+      const traceEdge = (
+        sourceCell: string,
+        sourcePortId: string | undefined,
+        targetCell: string,
+        targetPortId: string | undefined
+      ) => {
+        graphRef.current?.addEdge({
+          source: { cell: sourceCell, port: sourcePortId },
+          target: { cell: targetCell, port: targetPortId },
+          attrs: {
+            line: {
+              sourceMarker: 'circle',
+              targetMarker: 'circle',
+              stroke: '#f2f7fa',
+              strokeWidth: 0,
+            },
+          },
+        });
+      };
+
       // 点击连接桩生成节点
       const createParentNode = (child: EventArgs['node:port:click']) => {
         const { x, y } = child.cell.position();
@@ -364,6 +404,12 @@ const Index = () => {
             graphRef.current!
           );
           const childNode = createNode(x + 100, y + 150, 'Unknown', graphRef.current!);
+          traceEdge(
+            child.cell.id,
+            child.port,
+            brotherNode.id,
+            brotherNode.ports.items.find((item) => item.group === 'left')?.id
+          );
           const edge2 = addEdge(
             brotherNode.id,
             brotherNode.ports.items.find((item) => item.group === 'left')?.id,
@@ -398,6 +444,12 @@ const Index = () => {
             graphRef.current!
           );
           const childNode = createNode(x - 100, y + 150, 'Unknown', graphRef.current!);
+          traceEdge(
+            child.cell.id,
+            child.port,
+            brotherNode.id,
+            brotherNode.ports.items.find((item) => item.group === 'right')?.id
+          );
           const edge1 = addEdge(
             child.cell.id,
             child.port,

@@ -252,7 +252,7 @@ const AdoptedInRender = ({ value }: { value: boolean }) => {
 const MainNode = ({ node }: { node: Node<Node.Properties>; graph: Graph }) => {
   const data: DataTypes = node.data;
   const { t } = useTranslation();
-  console.log(data);
+  // console.log(data);
   return (
     <>
       {data.IndividualIs !== 'Miscarriage' && data.IndividualIs !== 'Aborted' && (
