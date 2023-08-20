@@ -32,6 +32,7 @@ interface NodeRecord {
   id: string; // 传到渲染 label 组件那条边的 id ，作为 key 去查找
   nodeList: string[];
   edgeList: string[];
+  isParent?: boolean; // 是否初始节点的父节点
 }
 
 type HeredityTypes = 'None' | 'Childless' | 'Infertile';
@@ -103,6 +104,8 @@ const Index = () => {
   const settingNodeRef = useRef<Node | undefined>(undefined);
   const selectNodeRef = useRef<Node | undefined>(undefined);
   const nodeRecordRef = useRef<NodeRecord[]>([]);
+  // 第一个创建的节点
+  const baseNodeRef = useRef<Node | undefined>(undefined);
 
   const clearNode = () => {
     settingNodeRef.current = undefined;
@@ -120,6 +123,7 @@ const Index = () => {
       icon: <ExclamationCircleFilled />,
       onOk() {
         try {
+          const searchDirection = findDeleteItem?.isParent ? 'incoming' : 'outgoing';
           // 删除记录上的节点和线
           findDeleteItem?.nodeList.forEach((node) => {
             const childNodeList: string[] = [];
@@ -130,11 +134,10 @@ const Index = () => {
               },
               {
                 deep: true,
-                outgoing: true,
+                [searchDirection]: true,
                 indirect: true,
               }
             );
-
             childNodeList?.forEach((id) => {
               id && graphRef.current?.removeNode(id);
             });
@@ -307,7 +310,7 @@ const Index = () => {
           })
         );
       // 初始化节点
-      graphRef.current.addNode({
+      baseNodeRef.current = graphRef.current.addNode({
         shape: 'MainNode',
         x: node.clientWidth / 2,
         y: node.clientHeight / 2,
@@ -353,13 +356,18 @@ const Index = () => {
           target: { cell: targetCell, port: targetPortId },
           attrs: {
             line: {
-              sourceMarker: 'circle',
-              targetMarker: 'circle',
+              sourceMarker: '',
+              targetMarker: '',
               stroke: '#f2f7fa',
               strokeWidth: 0,
             },
           },
         });
+      };
+
+      // 判断生成节点的位置是否在初始节点上方
+      const checkIfNodeAboveStart = (nodeYPosition: number): boolean => {
+        return nodeYPosition < (baseNodeRef.current?.position().y ?? 0);
       };
 
       // 点击连接桩生成节点
@@ -387,12 +395,20 @@ const Index = () => {
             }
           );
 
+          traceEdge(
+            maleNode.id,
+            maleNode.ports.items.find((item) => item.group === 'right')?.id,
+            femaleNode.id,
+            femaleNode.ports.items.find((item) => item.group === 'left')?.id
+          );
+
           edge1?.id &&
             edge2?.id &&
             pushNodeRecord({
               id: edge1.id,
               nodeList: [maleNode.id, femaleNode.id],
               edgeList: [edge1.id, edge2.id],
+              isParent: checkIfNodeAboveStart(maleNode.position().y),
             });
         }
         // 点击右侧连接桩
@@ -433,6 +449,7 @@ const Index = () => {
               id: edge1.id,
               nodeList: [brotherNode.id, childNode.id],
               edgeList: [edge1.id, edge2.id],
+              isParent: checkIfNodeAboveStart(brotherNode.position().y),
             });
         }
         // 点击左侧连接桩
@@ -473,6 +490,7 @@ const Index = () => {
               id: edge2.id,
               nodeList: [brotherNode.id, childNode.id],
               edgeList: [edge1.id, edge2.id],
+              isParent: checkIfNodeAboveStart(brotherNode.position().y),
             });
         }
         // 点击下方连接桩
@@ -494,6 +512,7 @@ const Index = () => {
               id: edge.id,
               nodeList: [childNode.id],
               edgeList: [edge.id],
+              isParent: checkIfNodeAboveStart(childNode.position().y),
             });
         }
       };
