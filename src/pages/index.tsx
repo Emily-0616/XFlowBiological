@@ -1,5 +1,5 @@
-import { SaveOutlined } from '@ant-design/icons';
-import { Cell, EventArgs, Graph, Node } from '@antv/x6';
+import { ExclamationCircleFilled, SaveOutlined } from '@ant-design/icons';
+import { EventArgs, Graph, Node } from '@antv/x6';
 import { Export } from '@antv/x6-plugin-export';
 import { History } from '@antv/x6-plugin-history';
 import { Keyboard } from '@antv/x6-plugin-keyboard';
@@ -7,14 +7,17 @@ import { Selection } from '@antv/x6-plugin-selection';
 import { Snapline } from '@antv/x6-plugin-snapline';
 import { register } from '@antv/x6-react-shape';
 import { css } from '@emotion/react';
-import { Button, Dropdown, Space, Tooltip, Upload } from 'antd';
+import { Button, Dropdown, Modal, Space, Tooltip, Upload } from 'antd';
+import { Dayjs } from 'dayjs';
 import fs from 'file-saver';
+import i18next from 'i18next';
 import { useCallback, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import CustomDeleteLabel from '../components/CustomDeleteLabel';
 import MainNode from '../components/MainNode';
 import SettingNode from '../components/SettingNode';
 import { ports } from '../data/default';
+import { updateSearchParams } from '../utils/updateSearchParams';
 
 /** @description 新增兄弟节点时判断输出什么属性 */
 enum AddNodeGenderMap {
@@ -30,6 +33,31 @@ interface NodeRecord {
   nodeList: string[];
   edgeList: string[];
 }
+
+type HeredityTypes = 'None' | 'Childless' | 'Infertile';
+type IndividualTypes = 'Alive' | 'Deceased' | 'Unborn' | 'Stillborn' | 'Miscarriage' | 'Aborted';
+type CarrierStatusTypes = 'NotAffected' | 'Affected' | 'Carrier' | 'PreSymptomatic';
+export type DataTypes = {
+  Gender: 'Male' | 'Female' | 'Unknown';
+  Name?: string;
+  LastNameAtBirth?: string;
+  ExternalID?: string;
+  Ethnicities?: string;
+  DateOfBirth: Dayjs | null;
+  DateOfDeath: Dayjs | null;
+  IndividualIs?: IndividualTypes;
+  heredityValue?: HeredityTypes;
+  heredityText?: string;
+  AdoptedIn: boolean;
+  GestationAge?: string;
+  CarrierStatus?: CarrierStatusTypes;
+  DocumentedEvaluation: boolean;
+  Proband?: boolean;
+  Comments?: string;
+  KnownDisordersOfThisIndividual?: string;
+  ClinicalSymptomsObservedPhenotypes?: string;
+  GenotypeInformationCandidateGenes?: string;
+};
 
 // 这个调用需要在组件外进行。
 register({
@@ -48,6 +76,7 @@ register({
       event: 'node:delete',
     },
   },
+  effect: ['data'],
 });
 
 // 点击连接桩生成的 MainNode 尺寸
@@ -56,36 +85,52 @@ const CREATE_NODE_SIZE = {
   height: 60,
 };
 
+const SETTING_INIT_DATA: DataTypes = {
+  Gender: 'Unknown',
+  DateOfBirth: null,
+  DateOfDeath: null,
+  AdoptedIn: false,
+  GestationAge: '-',
+  IndividualIs: 'Alive',
+  Name: '',
+  CarrierStatus: 'NotAffected',
+  DocumentedEvaluation: false,
+};
+
 const Index = () => {
   const graphRef = useRef<Graph | undefined>(undefined);
-  const settingNodeRef = useRef<Cell | undefined>(undefined);
   const containerRef = useRef<HTMLDivElement | undefined>(undefined);
-  const selectNodeRef = useRef<Cell | undefined>(undefined);
+  const settingNodeRef = useRef<Node | undefined>(undefined);
+  const selectNodeRef = useRef<Node | undefined>(undefined);
   const nodeRecordRef = useRef<NodeRecord[]>([]);
 
   const clearNode = () => {
-    selectNodeRef.current = undefined;
     settingNodeRef.current = undefined;
+    selectNodeRef.current = undefined;
   };
 
   const deleteNode = (id: string) => {
     const findDeleteItem = nodeRecordRef.current.find((item) => item.id === id);
-    // const findAllConnentNode = findDeleteItem?.nodeList.reduce((pre: string[], cur) => {
-    //   const connentNodeList = graphRef.current?.getConnectedEdges(cur, { deep: true })
-    //   Array.isArray(connentNodeList) && pre.push(...connentNodeList.map(edge => edge.id))
-    //   return pre
-    // }, [])
+    if (settingNodeRef.current) {
+      graphRef.current?.removeNode(settingNodeRef.current.id);
+      clearNode();
+    }
+    Modal.confirm({
+      title: `确认删除该连接线${!!findDeleteItem?.nodeList?.length ? '与对应的节点' : ''}吗？`,
+      icon: <ExclamationCircleFilled />,
+      onOk() {
+        // 删除记录上的节点和线
+        findDeleteItem?.nodeList.forEach((node) => {
+          graphRef.current?.removeNode(node);
+        });
+        findDeleteItem?.edgeList.forEach((edge) => {
+          graphRef.current?.removeEdge(edge);
+        });
 
-    // 删除记录上的节点和线
-    findDeleteItem?.nodeList.forEach((node) => {
-      graphRef.current?.removeNode(node);
+        const copied = nodeRecordRef.current.filter((item) => item.id !== id);
+        nodeRecordRef.current = [...copied];
+      },
     });
-    findDeleteItem?.edgeList.forEach((edge) => {
-      graphRef.current?.removeEdge(edge);
-    });
-
-    const copied = nodeRecordRef.current.filter((item) => item.id !== id);
-    nodeRecordRef.current = [...copied];
   };
 
   const pushNodeRecord = (addItem: NodeRecord) => {
@@ -94,6 +139,17 @@ const Index = () => {
     nodeRecordRef.current = [...copied];
   };
 
+  // 点击连接桩生成节点，动态修改gender 默认值
+  const createNode = (x: number, y: number, gender: string, graph: Graph): Node<Node.Properties> => {
+    return graph.addNode({
+      shape: 'MainNode',
+      x,
+      y,
+      size: CREATE_NODE_SIZE,
+      data: { ...SETTING_INIT_DATA, Gender: gender, heredityValue: 'None' },
+      ports: { ...ports },
+    });
+  };
   const containerRefCallback = useCallback((node: any) => {
     if (node) {
       containerRef.current = node;
@@ -110,6 +166,7 @@ const Index = () => {
           anchor: 'center',
           connectionPoint: 'anchor',
           allowBlank: false,
+          allowNode: false,
           snap: {
             radius: 20,
           },
@@ -129,8 +186,11 @@ const Index = () => {
           //     zIndex: 0,
           //   });
           // },
-          validateConnection({ targetMagnet }) {
-            return !!targetMagnet;
+          validateConnection({ sourceCell, targetCell }) {
+            if (sourceCell?.id === targetCell?.id) {
+              return false;
+            }
+            return true;
           },
         },
         highlighting: {
@@ -175,20 +235,26 @@ const Index = () => {
         },
         interacting: () => ({
           edgeLabelMovable: false,
+          nodeMovable: (event) => {
+            return event.cell.shape === 'SettingNode' ? false : true;
+          },
         }),
         onEdgeLabelRendered: (args) => {
+          // 通过 foreignObject 插入 react 节点 生成自定义 label
+          // 避免被遮挡 需要控制生成 label 的线条渲染顺序排最后
           const { selectors, label, edge } = args;
           const content = selectors.foContent as HTMLDivElement;
           if (content && (label.data === 'CustomDeleteLabel' || label.data === 'CustomDeleteLabel_bottom')) {
             content.style.display = 'flex';
             content.style.alignItems = 'center';
             content.style.justifyContent = 'center';
-            content.style.width = '50px';
-            content.style.height = '12px';
-            content.style.lineHeight = '12px';
+            content.style.width = '20px';
+            content.style.height = '20px';
             content.style.outline = 'none';
+            content.style.padding = '2px';
+            content.style.background = '#f2f7fa';
             content.style.transform =
-              label.data === 'CustomDeleteLabel' ? 'translate(-17px,-15px)' : 'translate(-24px, -10px)';
+              label.data === 'CustomDeleteLabel' ? 'translate(0px,-10px)' : 'translate(-10px, -40px)';
             ReactDOM.createRoot(content).render(<CustomDeleteLabel id={edge.id} onDelete={deleteNode} />);
           }
         },
@@ -221,7 +287,7 @@ const Index = () => {
             global: true,
           })
         );
-
+      // 初始化节点
       graphRef.current.addNode({
         shape: 'MainNode',
         x: node.clientWidth / 2,
@@ -230,22 +296,9 @@ const Index = () => {
           width: 60,
           height: 60,
         },
-        data: {
-          Gender: 'Unknown',
-        },
         ports: { ...ports },
+        data: { ...SETTING_INIT_DATA, Proband: true, heredityValue: 'None' },
       });
-
-      const createNode = (x: number, y: number, gender: string): Node<Node.Properties> => {
-        return graphRef.current!.addNode({
-          shape: 'MainNode',
-          x,
-          y,
-          size: CREATE_NODE_SIZE,
-          data: { Gender: gender },
-          ports: { ...ports },
-        });
-      };
 
       const addEdge = (
         sourceCell: string,
@@ -275,8 +328,14 @@ const Index = () => {
         const currentPorts = child.cell.ports.items.find((item) => item.id === child.port);
         // 点击上方连接桩
         if (currentPorts?.group === 'top') {
-          const maleNode = createNode(x - 100, y - 150, 'Male');
-          const femaleNode = createNode(x + 100, y - 150, 'Female');
+          const maleNode = createNode(x - 100, y - 150, 'Male', graphRef.current!);
+          const femaleNode = createNode(x + 100, y - 150, 'Female', graphRef.current!);
+          const edge2 = addEdge(
+            femaleNode.id,
+            femaleNode.ports.items.find((item) => item.group === 'left')?.id,
+            child.cell.id,
+            child.port
+          );
           const edge1 = addEdge(
             maleNode.id,
             maleNode.ports.items.find((item) => item.group === 'right')?.id,
@@ -286,12 +345,6 @@ const Index = () => {
               position: 60,
               data: 'CustomDeleteLabel',
             }
-          );
-          const edge2 = addEdge(
-            femaleNode.id,
-            femaleNode.ports.items.find((item) => item.group === 'left')?.id,
-            child.cell.id,
-            child.port
           );
 
           edge1?.id &&
@@ -304,8 +357,19 @@ const Index = () => {
         }
         // 点击右侧连接桩
         if (currentPorts?.group === 'right') {
-          const brotherNode = createNode(x + 200, y, AddNodeGenderMap[child.node.data?.Gender as AddNodeGenderMap]);
-          const childNode = createNode(x + 100, y + 150, 'Unknown');
+          const brotherNode = createNode(
+            x + 200,
+            y,
+            AddNodeGenderMap[child.node.data?.Gender as AddNodeGenderMap],
+            graphRef.current!
+          );
+          const childNode = createNode(x + 100, y + 150, 'Unknown', graphRef.current!);
+          const edge2 = addEdge(
+            brotherNode.id,
+            brotherNode.ports.items.find((item) => item.group === 'left')?.id,
+            childNode.id,
+            childNode.ports.items.find((item) => item.group === 'top')?.id
+          );
           const edge1 = addEdge(
             child.cell.id,
             child.port,
@@ -315,12 +379,6 @@ const Index = () => {
               position: 60,
               data: 'CustomDeleteLabel',
             }
-          );
-          const edge2 = addEdge(
-            brotherNode.id,
-            brotherNode.ports.items.find((item) => item.group === 'left')?.id,
-            childNode.id,
-            childNode.ports.items.find((item) => item.group === 'top')?.id
           );
 
           edge1?.id &&
@@ -333,8 +391,13 @@ const Index = () => {
         }
         // 点击左侧连接桩
         if (currentPorts?.group === 'left') {
-          const brotherNode = createNode(x - 200, y, AddNodeGenderMap[child.node.data?.Gender as AddNodeGenderMap]);
-          const childNode = createNode(x - 100, y + 150, 'Unknown');
+          const brotherNode = createNode(
+            x - 200,
+            y,
+            AddNodeGenderMap[child.node.data?.Gender as AddNodeGenderMap],
+            graphRef.current!
+          );
+          const childNode = createNode(x - 100, y + 150, 'Unknown', graphRef.current!);
           const edge1 = addEdge(
             child.cell.id,
             child.port,
@@ -362,7 +425,7 @@ const Index = () => {
         }
         // 点击下方连接桩
         if (currentPorts?.group === 'bottom') {
-          const childNode = createNode(x, y + 150, 'Unknown');
+          const childNode = createNode(x, y + 150, 'Unknown', graphRef.current!);
           const edge = addEdge(
             child.cell.id,
             child.port,
@@ -398,31 +461,31 @@ const Index = () => {
           }
         }
       };
-      graphRef.current.on('node:mouseenter', () => {
-        showPorts(graphRef.current?.getNodes(), true);
+      graphRef.current.on('node:mouseenter', (event) => {
+        if (event.cell.shape === 'MainNode') {
+          showPorts(graphRef.current?.getNodes(), true);
+        } else {
+          showPorts(graphRef.current?.getNodes(), false);
+        }
       });
       graphRef.current.on('node:mouseleave', () => {
         showPorts(graphRef.current?.getNodes(), false);
       });
-
-      graphRef.current.on('node:click', (event) => {
-        if (event.e.target.nodeName === 'circle') return;
-        // 如果当前不存在settingNode 的情况下跟据当前点击的node 坐标生成id
-        if (!settingNodeRef.current) {
+      graphRef.current.on('node:selected', (event) => {
+        selectNodeRef.current = event.node;
+        // 判断是否存在seetingNode 存在则修改定位跟data。否则则生成节点
+        if (settingNodeRef.current) {
+          settingNodeRef.current.setPosition({ x: event.node.position().x + 80, y: event.node.position().y });
+          settingNodeRef.current.setData(event.cell.data);
+        } else {
           settingNodeRef.current = graphRef.current?.addNode({
-            x: event.x + 60,
-            y: event.y - 20,
+            x: event.node.getPosition().x + 80,
+            y: event.node.position().y,
             shape: 'SettingNode',
             data: {
-              enableMove: false,
+              ...event.cell.data,
             },
           });
-          // 生成了settingNode 以后记录选中的node
-          selectNodeRef.current = event.cell;
-        }
-        // 如果settingNode 存在并且被点击的情况下，框选父节点
-        if (selectNodeRef.current && event.cell.shape === 'SettingNode') {
-          graphRef.current?.select(selectNodeRef.current.id);
         }
       });
       graphRef.current.on('blank:click', () => {
@@ -437,13 +500,30 @@ const Index = () => {
         node.remove();
         clearNode();
       });
+      // 两个节点都需要动态赋值
       graphRef.current.on('settingNode:change', (_: Node<Node.Properties>, data) => {
-        selectNodeRef.current?.setData({
-          ...data,
-        });
+        settingNodeRef.current?.setData(data);
+        selectNodeRef.current?.setData(data);
       });
       graphRef.current.on('node:port:click', (node: EventArgs['node:port:click']) => {
         createParentNode(node);
+      });
+      graphRef.current.on('edge:connected', ({ isNew, edge }) => {
+        if (isNew) {
+          // 对新创建的边进行插入数据库等持久化操作
+          console.log(isNew, edge);
+          edge?.appendLabel({
+            markup: [{ tagName: 'foreignObject', selector: 'foContent' }],
+            data: 'CustomDeleteLabel_bottom',
+            position: 40,
+          });
+          // 插入到存储列表中 用于删除查找
+          pushNodeRecord({
+            id: edge.id,
+            nodeList: [],
+            edgeList: [edge.id],
+          });
+        }
       });
     }
   }, []);
@@ -496,10 +576,18 @@ const Index = () => {
                 {
                   label: '简中',
                   key: 'zh-cn',
+                  onClick: () => {
+                    i18next.changeLanguage('zh');
+                    updateSearchParams({ local: 'zh' });
+                  },
                 },
                 {
                   label: '英文',
                   key: 'en',
+                  onClick: () => {
+                    i18next.changeLanguage('en');
+                    updateSearchParams({ local: 'en' });
+                  },
                 },
               ],
             }}>

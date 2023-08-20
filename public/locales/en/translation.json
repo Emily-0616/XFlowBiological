@@ -11,13 +11,10 @@
         "Female": "Female",
         "Unknown": "Unknown"
       },
-      "FirstName": "First name",
-      "LastName": "Last name",
-      "LastNameAtBirth": "Last name at birth",
-      "ExternalID": "External ID",
-      "Ethnicities": "Ethnicities",
+      "Name": "Name",
       "DateOfBirth": "Date of birth",
       "DateOfDeath": "Date of death",
+      "DatePlaceholder":"Select Data",
       "IndividualIs": {
         "Title": "Individual is",
         "Alive": "Alive",
@@ -35,9 +32,29 @@
         "Infertile": "Infertile"
       },
       "GestationAge": {
-        "Title": "Gestation age",
-        "week": "week"
+        "Title": "Gestation age"
       }
+    },
+    "ClinicalOptions": {
+      "CarrierStatus": {
+        "Title": "Carrier Status",
+        "NotAffected": "Not Affected",
+        "Affected":"Affected",
+        "Carrier": "Carrier",
+        "PreSymptomatic": "Pre-symptomatic"
+      },
+      "DocumentedEvaluation":"Documented evaluation",
+      "KnownDisordersOfThisIndividual":"Known disorders of this individual",
+      "ClinicalSymptomsObservedPhenotypes":"Clinical symptoms: observed phenotypes",
+      "GenotypeInformationCandidateGenes":"Genotype information: candidate genes",
+      "Comments":"Comments"
+    }
+  },
+  "Common":{
+    "date":{
+      "days":"days",
+      "week": "week",
+      "months":"months"
     }
   }
 }

@@ -1,32 +1,26 @@
-import { css } from '@emotion/react'
-import { FC } from 'react'
+import { FC } from 'react';
+import { CloseCircleOutlined } from '@ant-design/icons';
 
 interface Props {
-  id: string
-  onDelete: (id: string) => void
+  id: string;
+  onDelete: (id: string) => void;
 }
 
-const CustomDeleteLabel: FC<Props> = props => {
-  const CustomDeleteLabelStyled = css`
-    width: 50px;
-    height: 12px;
-    line-height: 12px;
-    background-color: red;
-    border-radius: 5px;
-    font-size: 10px;
-    text-align: center;
-  `
-
+const CustomDeleteLabel: FC<Props> = (props) => {
   return (
     <div
-      css={CustomDeleteLabelStyled}
-      onClick={() => {
-        typeof props.onDelete === 'function' && props.onDelete(props.id)
-      }}
-    >
-      remove
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+      <CloseCircleOutlined
+        onClick={() => {
+          typeof props.onDelete === 'function' && props.onDelete(props.id);
+        }}
+      />
     </div>
-  )
-}
+  );
+};
 
-export default CustomDeleteLabel
+export default CustomDeleteLabel;
