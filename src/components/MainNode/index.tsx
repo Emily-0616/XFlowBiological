@@ -5,44 +5,11 @@ import dayjs, { Dayjs } from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import { DataTypes } from '../../pages';
 import { isExceedingMonth, isExceedingYear, isFuture, isWithinMonth } from '../../utils/dateDiff';
-
-const ShapeRender = ({ Gender, Proband, IndividualIs, CarrierStatus }: DataTypes) => {
+// 是否先证者
+const ProbandRender = ({ value }: { value?: boolean }) => {
   return (
     <>
-      {Gender === 'Male' && (
-        <div
-          css={css`
-            width: 60px;
-            height: 60px;
-            border: ${Proband ? '4px' : '2px'} solid #5c5c66;
-            /* border-radius: 50%; */
-            border-radius: 8px;
-          `}></div>
-      )}
-      {Gender === 'Female' && (
-        <div
-          css={css`
-            width: 60px;
-            height: 60px;
-            border: ${Proband ? '4px' : '2px'} solid #5c5c66;
-            /* border-radius: 8px; */
-            border-radius: 50%;
-          `}></div>
-      )}
-
-      {Gender === 'Unknown' && (
-        <div
-          css={css`
-            width: 60px;
-            height: 60px;
-            background-color: transparent;
-            transform: scale(0.8) rotate(45deg);
-            margin: 0 auto;
-
-            border: ${Proband ? '4px' : '2px'} solid #5c5c66;
-          `}></div>
-      )}
-      {Proband && (
+      {value && (
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="25"
@@ -67,6 +34,41 @@ const ShapeRender = ({ Gender, Proband, IndividualIs, CarrierStatus }: DataTypes
           />
         </svg>
       )}
+    </>
+  );
+};
+
+// 个体
+const IndividualIsRender = ({ IndividualIs, Gender }: DataTypes) => {
+  return (
+    <>
+      {(IndividualIs === 'Miscarriage' || IndividualIs === 'Aborted') && (
+        <div
+          css={css`
+            height: 100%;
+            width: 100%;
+          `}>
+          <svg width="60" height="40" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="30,2 0,40 60,40" fill="none" stroke="#5c5c66" stroke-width="2" />
+          </svg>
+          {Gender !== 'Unknown' && (
+            <div
+              css={css`
+                text-align: center;
+              `}>
+              {Gender}
+            </div>
+          )}
+        </div>
+      )}
+    </>
+  );
+};
+
+// 其余数据变动联动图形
+const DataShapeRender = ({ IndividualIs, CarrierStatus }: DataTypes) => {
+  return (
+    <>
       {(IndividualIs === 'Deceased' || IndividualIs === 'Aborted' || IndividualIs === 'Stillborn') && (
         <div
           css={css`
@@ -78,6 +80,19 @@ const ShapeRender = ({ Gender, Proband, IndividualIs, CarrierStatus }: DataTypes
             top: -32%;
             left: 40%;
           `}></div>
+      )}
+      {IndividualIs === 'Unborn' && (
+        <div
+          css={css`
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-size: xx-large;
+            font-weight: 500;
+          `}>
+          P
+        </div>
       )}
 
       {CarrierStatus === 'Carrier' && (
@@ -108,6 +123,48 @@ const ShapeRender = ({ Gender, Proband, IndividualIs, CarrierStatus }: DataTypes
     </>
   );
 };
+
+// 性别
+const GenderRender = ({ Gender, Proband }: { Gender: string; Proband?: boolean }) => {
+  return (
+    <>
+      {Gender === 'Male' && (
+        <div
+          css={css`
+            width: 100%;
+            height: 100%;
+            border: ${Proband ? '4px' : '2px'} solid #5c5c66;
+            /* border-radius: 50%; */
+            border-radius: 8px;
+          `}></div>
+      )}
+      {Gender === 'Female' && (
+        <div
+          css={css`
+            width: 100%;
+            height: 100%;
+            border: ${Proband ? '4px' : '2px'} solid #5c5c66;
+            /* border-radius: 8px; */
+            border-radius: 50%;
+          `}></div>
+      )}
+      {Gender === 'Unknown' && (
+        <div
+          css={css`
+            width: 100%;
+            height: 100%;
+            background-color: transparent;
+            transform: scale(0.8) rotate(45deg);
+            margin: 0 auto;
+
+            border: ${Proband ? '4px' : '2px'} solid #5c5c66;
+          `}></div>
+      )}
+    </>
+  );
+};
+
+// 日期
 const DateRender = ({ DateOfBirth, DateOfDeath }: { DateOfBirth: Dayjs | null; DateOfDeath: Dayjs | null }) => {
   const { t } = useTranslation();
   // 如果有死亡时间优先显示
@@ -160,6 +217,7 @@ const DateRender = ({ DateOfBirth, DateOfDeath }: { DateOfBirth: Dayjs | null; D
   }
   return <></>;
 };
+// 是否被领养
 const AdoptedInRender = ({ value }: { value: boolean }) => {
   if (value) {
     return (
@@ -169,7 +227,7 @@ const AdoptedInRender = ({ value }: { value: boolean }) => {
             font-size: xxx-large;
             font-weight: 100;
             position: absolute;
-            left: -20%;
+            left: -30%;
             top: 0;
           `}>
           [
@@ -179,7 +237,7 @@ const AdoptedInRender = ({ value }: { value: boolean }) => {
             font-size: xxx-large;
             font-weight: 100;
             position: absolute;
-            right: -20%;
+            right: -30%;
             top: 0;
           `}>
           ]
@@ -197,7 +255,12 @@ const MainNode = ({ node }: { node: Node<Node.Properties>; graph: Graph }) => {
   console.log(data);
   return (
     <>
-      <ShapeRender {...data} />
+      {data.IndividualIs !== 'Miscarriage' && data.IndividualIs !== 'Aborted' && (
+        <GenderRender Gender={data.Gender} Proband={data.Proband} />
+      )}
+      <DataShapeRender {...data} />
+      <ProbandRender value={data.Proband} />
+      <IndividualIsRender {...data} />
       <AdoptedInRender value={data.AdoptedIn} />
       {data.DocumentedEvaluation && (
         <b

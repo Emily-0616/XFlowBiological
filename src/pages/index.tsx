@@ -54,6 +54,9 @@ export type DataTypes = {
   DocumentedEvaluation: boolean;
   Proband?: boolean;
   Comments?: string;
+  KnownDisordersOfThisIndividual?: string;
+  ClinicalSymptomsObservedPhenotypes?: string;
+  GenotypeInformationCandidateGenes?: string;
 };
 
 // 这个调用需要在组件外进行。
@@ -108,7 +111,10 @@ const Index = () => {
 
   const deleteNode = (id: string) => {
     const findDeleteItem = nodeRecordRef.current.find((item) => item.id === id);
-
+    if (settingNodeRef.current) {
+      graphRef.current?.removeNode(settingNodeRef.current.id);
+      clearNode();
+    }
     Modal.confirm({
       title: `确认删除该连接线${!!findDeleteItem?.nodeList?.length ? '与对应的节点' : ''}吗？`,
       icon: <ExclamationCircleFilled />,
