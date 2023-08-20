@@ -1,4 +1,4 @@
-import { SaveOutlined } from '@ant-design/icons';
+import { ExclamationCircleFilled, SaveOutlined } from '@ant-design/icons';
 import { EventArgs, Graph, Node } from '@antv/x6';
 import { Export } from '@antv/x6-plugin-export';
 import { History } from '@antv/x6-plugin-history';
@@ -7,8 +7,7 @@ import { Selection } from '@antv/x6-plugin-selection';
 import { Snapline } from '@antv/x6-plugin-snapline';
 import { register } from '@antv/x6-react-shape';
 import { css } from '@emotion/react';
-import { Button, Dropdown, Space, Tooltip, Upload, Modal } from 'antd';
-import { ExclamationCircleFilled } from '@ant-design/icons';
+import { Button, Dropdown, Modal, Space, Tooltip, Upload } from 'antd';
 import { Dayjs } from 'dayjs';
 import fs from 'file-saver';
 import i18next from 'i18next';
@@ -279,7 +278,7 @@ const Index = () => {
           height: 60,
         },
         ports: { ...ports },
-        data: SETTING_INIT_DATA,
+        data: { ...SETTING_INIT_DATA, Proband: true },
       });
       // 点击连接桩生成节点，动态修改gender 默认值
       const createNode = (x: number, y: number, gender: string): Node<Node.Properties> => {
