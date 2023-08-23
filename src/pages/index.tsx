@@ -116,19 +116,22 @@ const Index = () => {
   // 从记录里查找哪个项的 patentID 和传入的 id 对应
   const recursionRecord = (parentID: string) => {
     const deleteArray = deleteRecordRef.current;
-    const item = nodeRecordRef.current.find((item) => item.parentNodeID === parentID);
-    if (item) {
-      deleteArray.push(item);
-      deleteRecordRef.current = deleteArray;
+    const items = nodeRecordRef.current.filter((item) => item.parentNodeID === parentID);
+    if (!!items?.length) {
+      deleteRecordRef.current = [...deleteArray.concat(items)];
       // 从记录中移除
-      const copied = nodeRecordRef.current.filter((node) => node.id !== item.id);
-      nodeRecordRef.current = [...copied];
+      items.forEach((item) => {
+        const copied = nodeRecordRef.current.filter((node) => node.id !== item.id);
+        nodeRecordRef.current = [...copied];
+      });
     } else {
       return;
     }
 
-    item.nodeList.forEach((node) => {
-      recursionRecord(node);
+    items.forEach((item) => {
+      item.nodeList.forEach((node) => {
+        recursionRecord(node);
+      });
     });
   };
 
