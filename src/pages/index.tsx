@@ -32,7 +32,7 @@ interface NodeRecord {
   id: string; // 传到渲染 label 组件那条边的 id ，作为 key 去查找
   nodeList: string[];
   edgeList: string[];
-  isParent?: boolean; // 是否初始节点的父节点
+  parentNodeID?: string;
 }
 
 type HeredityTypes = 'None' | 'Childless' | 'Infertile';
@@ -104,12 +104,32 @@ const Index = () => {
   const settingNodeRef = useRef<Node | undefined>(undefined);
   const selectNodeRef = useRef<Node | undefined>(undefined);
   const nodeRecordRef = useRef<NodeRecord[]>([]);
+  const deleteRecordRef = useRef<NodeRecord[]>([]);
   // 第一个创建的节点
   const baseNodeRef = useRef<Node | undefined>(undefined);
 
   const clearNode = () => {
     settingNodeRef.current = undefined;
     selectNodeRef.current = undefined;
+  };
+
+  // 从记录里查找哪个项的 patentID 和传入的 id 对应
+  const recursionRecord = (parentID: string) => {
+    const deleteArray = deleteRecordRef.current;
+    const item = nodeRecordRef.current.find((item) => item.parentNodeID === parentID);
+    if (item) {
+      deleteArray.push(item);
+      deleteRecordRef.current = deleteArray;
+      // 从记录中移除
+      const copied = nodeRecordRef.current.filter((node) => node.id !== item.id);
+      nodeRecordRef.current = [...copied];
+    } else {
+      return;
+    }
+
+    item.nodeList.forEach((node) => {
+      recursionRecord(node);
+    });
   };
 
   const deleteNode = (id: string) => {
@@ -123,31 +143,21 @@ const Index = () => {
       icon: <ExclamationCircleFilled />,
       onOk() {
         try {
-          const searchDirection = findDeleteItem?.isParent ? 'incoming' : 'outgoing';
-          // 删除记录上的节点和线
+          deleteRecordRef.current = [findDeleteItem!];
+          // 查找子孙记录
           findDeleteItem?.nodeList.forEach((node) => {
-            const childNodeList: string[] = [];
-            graphRef.current?.searchCell(
-              graphRef.current?.getCellById(node),
-              (cell) => {
-                cell.id && childNodeList.push(cell.id);
-              },
-              {
-                deep: true,
-                [searchDirection]: true,
-                indirect: true,
-              }
-            );
-            childNodeList?.forEach((id) => {
-              id && graphRef.current?.removeNode(id);
-            });
-            graphRef.current?.removeNode(node);
+            recursionRecord(node);
           });
+          // 删除直接记录中的线
           findDeleteItem?.edgeList.forEach((edge) => {
             graphRef.current?.removeEdge(edge);
           });
-          const copied = nodeRecordRef.current.filter((item) => item.id !== id);
-          nodeRecordRef.current = [...copied];
+          // 删除关联记录中的节点
+          deleteRecordRef.current.forEach((item) => {
+            item.nodeList.forEach((node) => {
+              graphRef.current?.removeNode(node);
+            });
+          });
         } catch (err) {
           console.error(err);
         }
@@ -365,19 +375,21 @@ const Index = () => {
         });
       };
 
-      // 判断生成节点的位置是否在初始节点上方
-      const checkIfNodeAboveStart = (nodeYPosition: number): boolean => {
-        return nodeYPosition < (baseNodeRef.current?.position().y ?? 0);
-      };
-
       // 点击连接桩生成节点
       const createParentNode = (child: EventArgs['node:port:click']) => {
+        const { id: parentNodeID } = child.node;
         const { x, y } = child.cell.position();
         const currentPorts = child.cell.ports.items.find((item) => item.id === child.port);
         // 点击上方连接桩
         if (currentPorts?.group === 'top') {
           const maleNode = createNode(x - 100, y - 150, 'Male', graphRef.current!);
           const femaleNode = createNode(x + 100, y - 150, 'Female', graphRef.current!);
+          traceEdge(
+            maleNode.id,
+            maleNode.ports.items.find((item) => item.group === 'right')?.id,
+            femaleNode.id,
+            femaleNode.ports.items.find((item) => item.group === 'left')?.id
+          );
           const edge2 = addEdge(
             femaleNode.id,
             femaleNode.ports.items.find((item) => item.group === 'left')?.id,
@@ -395,20 +407,13 @@ const Index = () => {
             }
           );
 
-          traceEdge(
-            maleNode.id,
-            maleNode.ports.items.find((item) => item.group === 'right')?.id,
-            femaleNode.id,
-            femaleNode.ports.items.find((item) => item.group === 'left')?.id
-          );
-
           edge1?.id &&
             edge2?.id &&
             pushNodeRecord({
               id: edge1.id,
               nodeList: [maleNode.id, femaleNode.id],
               edgeList: [edge1.id, edge2.id],
-              isParent: checkIfNodeAboveStart(maleNode.position().y),
+              parentNodeID,
             });
         }
         // 点击右侧连接桩
@@ -449,7 +454,7 @@ const Index = () => {
               id: edge1.id,
               nodeList: [brotherNode.id, childNode.id],
               edgeList: [edge1.id, edge2.id],
-              isParent: checkIfNodeAboveStart(brotherNode.position().y),
+              parentNodeID,
             });
         }
         // 点击左侧连接桩
@@ -490,7 +495,7 @@ const Index = () => {
               id: edge2.id,
               nodeList: [brotherNode.id, childNode.id],
               edgeList: [edge1.id, edge2.id],
-              isParent: checkIfNodeAboveStart(brotherNode.position().y),
+              parentNodeID,
             });
         }
         // 点击下方连接桩
@@ -512,7 +517,7 @@ const Index = () => {
               id: edge.id,
               nodeList: [childNode.id],
               edgeList: [edge.id],
-              isParent: checkIfNodeAboveStart(childNode.position().y),
+              parentNodeID,
             });
         }
       };
@@ -582,7 +587,6 @@ const Index = () => {
       graphRef.current.on('edge:connected', ({ isNew, edge }) => {
         if (isNew) {
           // 对新创建的边进行插入数据库等持久化操作
-          console.log(isNew, edge);
           edge?.appendLabel({
             markup: [{ tagName: 'foreignObject', selector: 'foContent' }],
             data: 'CustomDeleteLabel_bottom',
